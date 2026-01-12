@@ -1,23 +1,79 @@
+let ttt ="aaaa"
+docReady(setup)
 
-const myHomography = new homography.Homography();
+let vidUrl = ""
+let gframes = []
 
+function setup() {
 
+    iniStripe()
+    initDraw()
 
-
-
-function shapeTrajectory(stripe,points, space,n) {
-
-
-
-    const w = stripe.width
-
-    // Define the reference points. In this case using normalized coordinates (from 0.0 to 1.0).
-    const srcPoints = [[0, 0], [0, 1], [1, 0], [1, 1]];
-    const dstPoints = [[1/5, 1/5], [0, 1/2], [1, 0], [6/8, 6/8]];
+    document.getElementById("videoInput").onchange = async e => {
 
 
-    const myHomography = new Homography("piecewiseaffine");
-    // Set the reference points
-    myHomography.setReferencePoints(srcPoints, dstPoints);
-    // Warp your image
+
+        // /* perhaps old stuff
+        // console.log("dqsdsqdqs");
+        vidUrl = URL.createObjectURL(e.target.files[0])
+        const vid = document.createElement("video");
+        vid.src = vidUrl;
+        const r = await extractFramesFromVideo(vid).then(r => r)
+        gframes = r
+        singleSlit(gframes)
+
+        ;
+        //buffer webcodecStuff -> I haven't given up yet
+        // const buffer = await e.target.files[0].arrayBuffer();
+        // buffer.fileStart = 0;
+        // extractFrames(buffer)
+
+
+
+
+         // */
+       // let vid =  testpreload()
+
+
+
+
+    }
+}
+
+
+function testpreload() {
+
+
+    var video = document.createElement("video");
+
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", vidUrl, true);
+    xhr.responseType = "arraybuffer";
+
+    xhr.onload = function (oEvent) {
+
+        var blob = new Blob([oEvent.target.response], {type: "video/yourvideosmimmetype"});
+
+        video.src = URL.createObjectURL(blob);
+
+        //video.play()  if you want it to play on load
+    };
+
+    xhr.onprogress = function (oEvent) {
+
+        if (oEvent.lengthComputable) {
+            var percentComplete = oEvent.loaded / oEvent.total;
+            // do something with this
+        }
+    }
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            return video
+        }
+    }
+
+    xhr.send();
+
+    return video
 }

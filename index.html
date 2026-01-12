@@ -8,7 +8,6 @@
     <meta name="author" content="">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="assets/css/normalize.css">
     <link rel="stylesheet" href="assets/css/skeleton.css">
@@ -16,9 +15,31 @@
     <link rel="icon" type="image/png" href="assets/images/favicon/favicon.ico">
     <script src="https://cdn.jsdelivr.net/gh/Eric-Canas/Homography.js@1.4/HomographyLightweight.min.js"></script>
 
+
+<!--    <script  src="https://cdn.jsdelivr.net/npm/mp4box/dist/mp4box.simple.js"></script>-->
+<!--    <script type="javascript" src="assets/lib/mp4box.simple.js"></script>-->
+
+    <script src="assets/lib/MP4Box_minified.js"></script>
+<!--    <script src="assets/lib/CrafyVideoJS.js"></script>-->
+
+    <script src="assets/js/canvasDraw.js"></script>
+    <script src="assets/js/videoSampler.js"></script>
+
+    <script src="assets/js/stripe.js"></script>
+    <script src="assets/js/slit.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/main.js"></script>
+
+
 </head>
 <body>
-
+<script type="module">
+    // import * as MP4Box from '/assets/lib/mp4box.simple.js';
+    // ttt = MP4Box
+    // const mp4box = MP4Box.createFile();
+    // console.log(mp4box);
+    // console.log(ttt);
+</script>
 <!-- Primary Page Layout
 –––––––––––––––––––––––––––––––––––––––––––––––––– -->
 <div class="container" style="margin-bottom: 5%">
@@ -29,7 +50,7 @@
     </div>
 
 
-    <div class="row">
+    <div class="row" id="tempDisplay">
 
 
     </div>
@@ -37,20 +58,26 @@
 
     <div class="row">
         <div class="twelve column" style="margin-top: 10%">
-            <h4 style="text-align: left"> Cuiller à soupe </h4>
-
+            <div style="margin-bottom: 0;border:  1px solid #555;">
+                <canvas id="main" style="width: 100%; height: 100%">
+                </canvas>
+            </div>
         </div>
 
     </div>
-
-
+    <div>
+        <input id="videoInput" type="file" accept="video/*"/>
+    </div>
     <div class="row">
         <div class="twelve column" style="margin-top: 10%">
-
-
+            <div style="margin-bottom: 0;border:  1px solid #555;height: 150px">
+                <canvas id="stripe" style="width: 100%; height: 150px">
+                </canvas>
+            </div>
         </div>
 
     </div>
+
 
 </div>
 
