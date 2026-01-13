@@ -19,12 +19,17 @@
 <!--    <script  src="https://cdn.jsdelivr.net/npm/mp4box/dist/mp4box.simple.js"></script>-->
 <!--    <script type="javascript" src="assets/lib/mp4box.simple.js"></script>-->
 
-    <script src="assets/lib/MP4Box_minified.js"></script>
+<!--    <script src="assets/lib/MP4Box_minified.js"></script>-->
+        <script src="assets/lib/mediabunny.cjs"></script>
+<!--    <script type="module" src=" https://cdn.jsdelivr.net/npm/mediabunny@1.27.6/dist/modules/src/index.min.js "></script>-->
 <!--    <script src="assets/lib/CrafyVideoJS.js"></script>-->
 
     <script src="assets/js/canvasDraw.js"></script>
+    <script src="assets/js/fakeDataset.js"></script>
     <script src="assets/js/videoSampler.js"></script>
+    <script src="assets/js/mediaBunnyTests.js"></script>
 
+    <script src="assets/js/testMeshGL.js"></script>
     <script src="assets/js/stripe.js"></script>
     <script src="assets/js/slit.js"></script>
     <script src="assets/js/utils.js"></script>
@@ -50,7 +55,7 @@
     </div>
 
 
-    <div class="row" id="tempDisplay">
+    <div class="row" style="display: none" id="tempDisplay">
 
 
     </div>
@@ -67,6 +72,7 @@
     </div>
     <div>
         <input id="videoInput" type="file" accept="video/*"/>
+<!--        <button id="modalSlit" type="file" accept="video/*"/>-->
     </div>
     <div class="row">
         <div class="twelve column" style="margin-top: 10%">

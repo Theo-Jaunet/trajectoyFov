@@ -85,7 +85,11 @@ function onMouseUp(e) {
         // updateMainCanvas()
         // fillStrokes()
 
-        rectMatch(stroke, 40, "stretch")
+        // rectMatch(stroke, 40, "stretch")
+
+
+
+        makeMapping(stroke.map(d=>{return {x:d[0],y:d[1]}}), document.getElementById('stripe'))
     }
 
     currStroke = []

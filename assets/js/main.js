@@ -1,40 +1,47 @@
-let ttt ="aaaa"
 docReady(setup)
 
 let vidUrl = ""
 let gframes = []
 
-function setup() {
+let dev = true
+
+async function setup() {
 
     iniStripe()
     initDraw()
-
+    if (dev) {
+        const tcan = document.getElementById("main")
+        const tcon = tcan.getContext("2d")
+        tcon.font = "bold 48px serif";
+        tcon.fillText("Loading Images...", 260,200)
+        gframes = await getThem(471)
+        // singleSlit(gframes)
+        slitSquare(gframes)
+    }
     document.getElementById("videoInput").onchange = async e => {
-
 
 
         // /* perhaps old stuff
         // console.log("dqsdsqdqs");
         vidUrl = URL.createObjectURL(e.target.files[0])
-        const vid = document.createElement("video");
-        vid.src = vidUrl;
-        const r = await extractFramesFromVideo(vid).then(r => r)
-        gframes = r
+        console.time("encoding")
+        let frames = await mediaFramesTest(e.target.files[0])
+
+        /*      let tcont =  document.getElementById("tempDisplay")
+
+              for (let i = 0; i < t.length; i++) {
+                  tcont.appendChild(t[i])
+              }*/
+        console.timeEnd("encoding")
+
+        /*      const vid = document.createElement("video");
+              vid.src = vidUrl;
+              const r = await extractFramesFromVideo(vid).then(r => r)
+              // gframes = r
+              singleSlit(gframes)*/
+        gframes = frames
         singleSlit(gframes)
-
         ;
-        //buffer webcodecStuff -> I haven't given up yet
-        // const buffer = await e.target.files[0].arrayBuffer();
-        // buffer.fileStart = 0;
-        // extractFrames(buffer)
-
-
-
-
-         // */
-       // let vid =  testpreload()
-
-
 
 
     }
