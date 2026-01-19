@@ -1,3 +1,46 @@
+let nStripe = 0
+let selectedStripe = null
+
+const stripes = {}
+
+function makeClientStripe() {
+
+    let container = document.getElementById('stripeList');
+
+    let row = document.createElement("div")
+    let options = document.createElement("div");
+    let tcan = document.createElement("canvas");
+
+    row.setAttribute("class", "stripeRow")
+    options.setAttribute("class", "slitInfo")
+    tcan.setAttribute("class", "stripeCan")
+    tcan.setAttribute("row", nStripe)
+
+    options.innerHTML = `
+    <div class ="stripeTypes">
+        <p>Sample Type:</p>
+        <img class="rectSlit" row="${nStripe}" src="assets/images/pictos/rect.png"/>
+        <img class="lineSlit" row="${nStripe}" src="assets/images/pictos/poly.png"/>
+        <div>Fov<input type="checkbox" class="fovRadio" row="${nStripe}"> </div>
+    </div>
+    <div class ="stripeFps">
+        <p >Sample Fps: </p>
+        <span>1 frame every <input type="number" min="1" max="10" step="1" value="1"/>second </span>
+        
+    </div>
+    <button class="stripeRun wrongButton">Run</button>
+    `
+    row.appendChild(options)
+    row.appendChild(tcan)
+    container.appendChild(row)
+    slitEvents(row)
+    stripes[nStripe] = {}
+    ++nStripe
+
+
+}
+
+
 function iniStripe() {
 
     let can = document.getElementById('stripe');
@@ -12,7 +55,7 @@ function iniStripe() {
     gradient.addColorStop(1, "red");
 
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, can.width, can.height/2);
+    ctx.fillRect(0, 0, can.width, can.height / 2);
 
     const gradient2 = ctx.createLinearGradient(0, 0, can.width, 10);
 
@@ -21,7 +64,7 @@ function iniStripe() {
     gradient2.addColorStop(1, "green");
 
     ctx.fillStyle = gradient2;
-    ctx.fillRect(0, can.height/2, can.width, can.height);
+    ctx.fillRect(0, can.height / 2, can.width, can.height);
 
     // debugSquares(can)
 
@@ -33,10 +76,10 @@ function debugSquares(can) {
     const sqSize = 20
     const cont = can.getContext("2d")
     cont.beginPath()
-    for (let i = 0; i <Math.floor(can.width/sqSize) ; i++) {
+    for (let i = 0; i < Math.floor(can.width / sqSize); i++) {
         // for (let j = 0; j < Math.floor(can.height / sqSize); j++) {
         let j = 0
-            cont.rect(i * sqSize, j * sqSize, sqSize, sqSize)
+        cont.rect(i * sqSize, j * sqSize, sqSize, sqSize)
         // }
     }
     cont.stroke()
@@ -92,4 +135,69 @@ function rectMatch(pts, height, type = 'pointWise') {
     }
 
 
+}
+
+function slitEvents(row) {
+
+
+    row.onclick = (e) => {
+        const el = e.target;
+
+        if (el.matches(".rectSlit")) {
+            console.log("here");
+            const n = +el.getAttribute("row")
+
+            prepSvg("rect", n)
+        } else if (el.matches(".lineSlit")) {
+            const n = +el.getAttribute("row")
+            console.log("there");
+        } else if (el.matches(".fovRadio")) {
+            const n = +el.getAttribute("row")
+            stripes[n].fov = el.checked
+            makeSlit(stripes[n])
+        }
+
+    }
+}
+
+function makeSlit(strip) {
+    const type = strip.type
+    if (type === "rect") {
+        slitRect(gframes, strip.rect, selectedStripe)
+    }else if (type === "line") {
+
+    }
+
+}
+
+
+function prepSvg(type, n) {
+    const vid = document.getElementById('mainVideo');
+    const svg = d3.select("#videoOverlay")
+    vid.controls = false
+    selectedStripe = n
+    stripes[selectedStripe].type = type
+    // stripes[selectedStripe].fov = true
+    //
+    if (type === "rect") {
+        svg.append("g")
+            .attr("class", "brush")
+            .call(d3.brush().on("end", brushed))
+        // .extent()
+    }
+}
+
+function brushed(e) {
+    // console.log(e.selection);
+    const select = e.selection
+
+    let rect = {
+        x: select[0][0] / vidSize.width,
+        y: select[0][1] / vidSize.height,
+        width: (select[1][0]- select[0][0]) / vidSize.width,
+        height: (select[1][1]- select[0][1]) / vidSize.height
+    }
+
+    stripes[selectedStripe].rect = rect
+    slitRect(gframes, rect, selectedStripe)
 }

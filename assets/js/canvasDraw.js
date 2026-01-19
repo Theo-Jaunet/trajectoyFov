@@ -87,9 +87,9 @@ function onMouseUp(e) {
 
         // rectMatch(stroke, 40, "stretch")
 
+        let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
 
-
-        makeMapping(stroke.map(d=>{return {x:d[0],y:d[1]}}), document.getElementById('stripe'))
+        makeMapping(stroke.map(d=>{return {x:d[0],y:d[1]}}), can)
     }
 
     currStroke = []
