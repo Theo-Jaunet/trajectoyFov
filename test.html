@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<script>
+    /* =========================
+       USER DATA
+    ========================= */
+
+
+
+    const path = [
+        { x: 50,  y: 250 },
+        { x: 200, y: 120 },
+        { x: 400, y: 180 },
+        { x: 600, y: 80  },
+        { x: 820, y: 260 }
+    ];
+
+    const IMAGE_SRC = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Soup_Spoon.jpg/250px-Soup_Spoon.jpg";
+    const SAMPLE_STEP = 4; // smaller = smoother
+
+    /* =========================
+       WEBGL SETUP
+    ========================= */
+
+    const canvas = document.getElementById("c");
+    const gl = canvas.getContext("webgl");
+    if (!gl) throw "WebGL not supported";
+
+    function shader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+            throw gl.getShaderInfoLog(s);
+        return s;
+    }
+
+    const program = gl.createProgram();
+    gl.attachShader(program, shader(gl.VERTEX_SHADER, `
+attribute vec2 a_pos;
+attribute vec2 a_uv;
+uniform vec2 u_res;
+varying vec2 v_uv;
+void main() {
+  vec2 p = a_pos / u_res * 2.0 - 1.0;
+  gl_Position = vec4(p.x, -p.y, 0, 1);
+  v_uv = a_uv;
+}`));
+
+    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, `
+precision mediump float;
+uniform sampler2D u_tex;
+varying vec2 v_uv;
+void main() {
+  gl_FragColor = texture2D(u_tex, v_uv);
+}`));
+
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    /* =========================
+       PATH SAMPLING
+    ========================= */
+
+    function buildSamples(path, step) {
+        const s = [];
+        for (let i = 0; i < path.length - 1; i++) {
+            const a = path[i];
+            const b = path[i + 1];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const len = Math.hypot(dx, dy);
+            const n = Math.ceil(len / step);
+
+            for (let j = 0; j < n; j++) {
+                const t = j / n;
+                s.push({
+                    x: a.x + dx * t,
+                    y: a.y + dy * t,
+                    angle: Math.atan2(dy, dx)
+                });
+            }
+        }
+        return s;
+    }
+
+    /* =========================
+       MESH BUILDING
+    ========================= */
+
+    function buildMesh(samples, h) {
+        const pos = [];
+        const uv = [];
+        const idx = [];
+        const hh = h / 2;
+
+        samples.forEach((p, i) => {
+            const nx = Math.cos(p.angle + Math.PI / 2);
+            const ny = Math.sin(p.angle + Math.PI / 2);
+            const u = i / (samples.length - 1);
+
+            // top
+            pos.push(p.x + nx * hh, p.y + ny * hh);
+            uv.push(u, 0);
+
+            // bottom
+            pos.push(p.x - nx * hh, p.y - ny * hh);
+            uv.push(u, 1);
+
+            if (i < samples.length - 1) {
+                const k = i * 2;
+                idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
+            }
+        });
+
+        return {
+            pos: new Float32Array(pos),
+            uv:  new Float32Array(uv),
+            idx: new Uint16Array(idx)
+        };
+    }
+
+    /* =========================
+       IMAGE + DRAW
+    ========================= */
+
+    const img = new Image();
+    img.src = IMAGE_SRC;
+    img.crossOrigin = "anonymous"
+    img.onload = () => {
+        const samples = buildSamples(path, SAMPLE_STEP);
+        const mesh = buildMesh(samples, img.height);
+
+        // buffers
+        function buffer(type, data, attr, size) {
+            const b = gl.createBuffer();
+            gl.bindBuffer(type, b);
+            gl.bufferData(type, data, gl.STATIC_DRAW);
+            if (attr) {
+                const loc = gl.getAttribLocation(program, attr);
+                gl.enableVertexAttribArray(loc);
+                gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+            }
+            return b;
+        }
+
+        buffer(gl.ARRAY_BUFFER, mesh.pos, "a_pos", 2);
+        buffer(gl.ARRAY_BUFFER, mesh.uv,  "a_uv",  2);
+        buffer(gl.ELEMENT_ARRAY_BUFFER, mesh.idx);
+
+        // texture
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+            gl.UNSIGNED_BYTE, img
+        );
+
+        gl.uniform2f(
+            gl.getUniformLocation(program, "u_res"),
+            canvas.width,
+            canvas.height
+        );
+
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawElements(gl.TRIANGLES, mesh.idx.length, gl.UNSIGNED_SHORT, 0);
+    };
+</script>
+</body>
+</html>
