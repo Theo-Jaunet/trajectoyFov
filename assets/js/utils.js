@@ -76,3 +76,8 @@ function cloneCanvas(oldCanvas) {
     //return the new canvas
     return newCanvas;
 }
+
+
+function intervaler(array,inter) {
+    return array.filter( (d,i) => !(i%inter))
+}
