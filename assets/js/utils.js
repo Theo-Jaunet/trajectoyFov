@@ -81,3 +81,5 @@ function cloneCanvas(oldCanvas) {
 function intervaler(array,inter) {
     return array.filter( (d,i) => !(i%inter))
 }
+
+const concat = (xs, ys) => xs.concat(ys);

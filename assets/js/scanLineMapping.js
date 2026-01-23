@@ -1,10 +1,6 @@
 // Source - https://stackoverflow.com/a
-// Posted by Blindman67, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-01-13, License - CC BY-SA 3.0
-
 //TODO: check is scanLine can be an option for more control
 
-// creates a blank image with 2d context
 var createImage = function (w, h) {
     var i = document.createElement("canvas");
     i.width = w;
@@ -13,16 +9,13 @@ var createImage = function (w, h) {
     return i;
 }
 
-// setup canvas
 var canvas = createImage(400, 400);
 var ctx = canvas.ctx;
 document.body.appendChild(canvas);
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 document.body.style.background = "#999";
 
-const quality = 500; // this value should be greater than the approx length
-                     // of the bezier curve in pixels.
-// create source image with gradient alpha 0 to 1 to 0
+const quality = 500; // this value should be greater than the approx length of the bezier curve in pixels.
 var sWidth = 300;
 var sHeight = 100;
 var checkerSize = 20;

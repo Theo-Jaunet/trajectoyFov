@@ -40,6 +40,9 @@
     margin-bottom: 2px;
 }
 
+#videoOverlay {
+    border-radius: 5px;
+}
 
 .stripeTypes {
     display: flex;
@@ -103,4 +106,15 @@ span input {
 
 .slitEdit {
     border: red solid 1px;
+}
+
+
+#pointer1, #pointer2 {
+
+    cursor: pointer;
+}
+
+#pointer1:hover, #pointer2:hover {
+
+   fill: #cf3e3e !important;
 }

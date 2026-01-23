@@ -1,6 +1,6 @@
 let initSvg = true
 let loadingBar
-let totalFramesThreshold = 200
+let totalFramesThreshold = 500
 
 async function mediaFramesTest(file) {
     const input = new Mediabunny.Input({
@@ -115,4 +115,5 @@ function clearLoading() {
 
     document.getElementById("mainVideo").controls = true
     initSvg = true
+    svg.style("display", "none")
 }

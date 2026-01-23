@@ -38,6 +38,16 @@ function makeClientStripe() {
     stripes[nStripe] = {}
     ++nStripe
 
+    tcan.onclick = async e => {
+
+        let rect = tcan.getBoundingClientRect()
+        console.log(rect.width,"canSize");
+        console.log(e.offsetX,"offsetX");
+        const ratio = e.offsetX / rect.width
+        console.log(ratio,"ratio");
+        updateVid(ratio)
+
+    }
 
 }
 
@@ -159,6 +169,15 @@ function slitEvents(row) {
 
         } else if (el.matches(".lineSlit")) {
             const n = +el.getAttribute("row")
+            if (!slitEdit) {
+                slitEdit = true
+                el.classList.add("slitEdit");
+                prepSvg("line", n)
+            } else {
+                el.classList.remove("slitEdit");
+                slitEdit = false
+                resetSvg()
+            }
 
         } else if (el.matches(".fovRadio")) {
             const n = +el.getAttribute("row")
@@ -187,7 +206,7 @@ function prepSvg(type, n) {
     selectedStripe = n
     stripes[selectedStripe].type = type
     // stripes[selectedStripe].fov = true
-
+    svg.style('display', 'inline-block');
 
     if (type === "rect") {
         svg.append("g")
@@ -195,21 +214,72 @@ function prepSvg(type, n) {
             .call(d3.brush().on("end", brushed))
         // .extent()
     } else if (type === "line") {
+        const cr = 7
+        stripes[selectedStripe].points = [{x: 0, y: 0.5}, {x: 1, y: 0.5}]
+
+        let pt1 = stripes[selectedStripe].points[0]
+        let pt2 = stripes[selectedStripe].points[1]
+        svg.append("line")
+            .attr("id", "slitLine")
+            .attr("x1", vidSize.width * pt1.x)
+            .attr("y1", vidSize.height * pt1.y)
+            .attr("x2", vidSize.width * pt2.x)
+            .attr("y2", vidSize.height * pt2.y)
+            .attr("stroke-width", 2)
+            .attr("stroke", "black")
 
         svg.append("circle")
             .attr("id", "pointer1")
-            .attr("cx",3)
-            .attr("cy",3)
-            .attr("r",3)
-
+            .attr("cx", vidSize.width * pt1.x)
+            .attr("cy", vidSize.height * pt1.y)
+            .attr("r", cr)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
 
         svg.append("circle")
             .attr("id", "pointer2")
-            .attr("cx",3)
-            .attr("cy",3)
-            .attr("r",3)
+            .attr("cx", vidSize.width * pt2.x)
+            .attr("cy", vidSize.height * pt2.y)
+            .attr("r", cr)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        slitLine(gframes,...stripes[selectedStripe].points,selectedStripe)
     }
 }
+
+
+function dragstarted() {
+    d3.select(this).attr("stroke", "black");
+}
+
+function dragged(event) {
+    const elem = d3.select(this)
+    elem.raise().attr("cx", event.x).attr("cy",  event.y);
+
+    let id = +elem.attr("id").slice(- 1) -1
+
+    stripes[selectedStripe].points[id] = {x: event.x/vidSize.width, y: event.y/vidSize.height};
+
+    d3.select("#slitLine")
+        .attr("x1", vidSize.width * stripes[selectedStripe].points[0].x)
+        .attr("y1", vidSize.height * stripes[selectedStripe].points[0].y)
+        .attr("x2", vidSize.width * stripes[selectedStripe].points[1].x)
+        .attr("y2", vidSize.height * stripes[selectedStripe].points[1].y)
+
+}
+
+function dragended() {
+    d3.select(this).attr("stroke", null);
+
+
+    slitLine(gframes,...stripes[selectedStripe].points,selectedStripe)
+}
+
 
 function brushed(e) {
     // console.log(e.selection);
@@ -231,4 +301,12 @@ function resetSvg() {
     const svg = d3.select("#videoOverlay")
     vid.controls = true
     svg.style('display', 'none');
+    svg.selectAll("*").remove()
+}
+
+
+function updateVid(ratio) {
+
+    const vid = document.getElementById('mainVideo');
+    vid.currentTime = vid.duration * ratio;
 }
