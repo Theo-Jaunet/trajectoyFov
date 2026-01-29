@@ -9,6 +9,8 @@ let cv
 async function setup() {
 
     // iniStripe()
+
+    await getVidFromUrl("assets/baseVid/trail.mp4")
     initDraw()
     const vid = document.getElementById("mainVideo")
     if (dev) {
@@ -174,3 +176,42 @@ function onOpenCvReady(e) {
     // tracker = createCameraPathTracker();
 }
 
+async function getVidFromUrl(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+
+        const result = await response;
+
+        let t = await result.blob()
+
+        vidUrl = URL.createObjectURL(t)
+
+
+
+
+        let frames = await mediaFramesTest(t)
+        gframes = frames;
+
+
+
+        const vid = document.getElementById("mainVideo")
+        document.getElementById("mainSource").src = vidUrl
+        await vid.load()
+
+        let svg = document.getElementById("videoOverlay")
+
+        let coords = vid.getBoundingClientRect()
+        console.log(coords);
+        vid.controls = false
+
+        svg.style.width = coords.width + "px";
+        svg.style.height = coords.height + "px";
+        vidSize = {width: coords.width, height: coords.height};
+
+    } catch (error) {
+        console.error(error.message);
+    }
+}
