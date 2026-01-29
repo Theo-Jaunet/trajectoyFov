@@ -78,8 +78,21 @@ function cloneCanvas(oldCanvas) {
 }
 
 
-function intervaler(array,inter) {
-    return array.filter( (d,i) => !(i%inter))
+function intervaler(array, inter) {
+    return array.filter((d, i) => !(i % inter))
 }
 
 const concat = (xs, ys) => xs.concat(ys);
+
+
+function resizeCan(can, ratio) {
+    let tcan = document.createElement("canvas");
+    let tcont = tcan.getContext("2d")
+
+    tcan.width = can.width * ratio;
+    tcan.height = can.height * ratio;
+
+    tcont.drawImage(can, 0, 0, tcan.width, tcan.height);
+
+    return tcan
+}

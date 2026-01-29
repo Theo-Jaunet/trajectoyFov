@@ -115,3 +115,13 @@ function draw(cont,stroke) {
     cont.stroke()
     cont.closePath();
 }
+
+
+function prepMapping() {
+    let can = document.getElementById("main")
+    let cont = can.getContext('2d');
+
+    cont.clearRect(0,0,9999,9999)
+    draw(cont,stroke)
+
+}

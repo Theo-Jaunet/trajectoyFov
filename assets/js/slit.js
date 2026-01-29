@@ -1,4 +1,4 @@
-function singleSlit(frames) {
+/*function singleSlit(frames) {
 
     let can = document.getElementById("stripe")
     const ctx = can.getContext("2d")
@@ -24,7 +24,7 @@ function singleSlit(frames) {
         // ctx.drawImage(frames[i], 0, 0, w, can.height)
     }
 
-}
+}*/
 
 
 function slitLine(frames, pt1, pt2, n) {
@@ -61,7 +61,10 @@ function slitLine(frames, pt1, pt2, n) {
 }
 
 function slitRect(frames, rect, n) {
+    let sampleWidth = 10
+    let sampleHeight = 150
 
+    const timeLength = [...Array(frames.length).keys()].map(d => Math.max(Math.sin(d / frames.length) * 100, sampleWidth))
 
     let can = d3.select(`.stripeCan[row='${n}'`).node()
 
@@ -76,8 +79,6 @@ function slitRect(frames, rect, n) {
 
     // console.log(x,y,w,h)
 
-    let sampleWidth = 10
-    let sampleHeight = 150
 
     const canMaxW = 6000
     if (frames.length * sampleWidth > canMaxW) {
@@ -97,6 +98,7 @@ function slitRect(frames, rect, n) {
 
     tcan.width = w
     tcan.height = h
+    let total = 0
 
     for (let i = 0; i < frames.length; i++) {
 
@@ -107,13 +109,21 @@ function slitRect(frames, rect, n) {
             ctx.drawImage(temp, sampleWidth * i, 0, sampleWidth, can.height)
         } else {
             ctx.drawImage(tcan, sampleWidth * i, 0, sampleWidth, can.height)
+
+            // ctx.drawImage(tcan, total, 0, timeLength[i], can.height)
+            // total+= timeLength[i]
         }
     }
 
     if (stroke.length > 0) {
+
+
+
         makeMapping(stroke.map(d => {
             return {x: d[0], y: d[1]}
-        }), can)
+        }), can,snake(stroke))
+
+
     }
 }
 
@@ -180,7 +190,7 @@ function flipForFoV(can) {
     tcont.rotate(90 * Math.PI / 180);
 
     // tcont.drawImage(can, 0, 0, can.width, can.height, -h / 2, -w / 2, h,w)
-    tcont.drawImage(can, 0, 0, can.width, can.height, -h / 2, -w / 2, h,w)
+    tcont.drawImage(can, 0, 0, can.width, can.height, -h / 2, -w / 2, h, w)
 
     // container.append(tcan)
 

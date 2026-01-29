@@ -1,51 +1,3 @@
-// Source - https://stackoverflow.com/a
-//TODO: check is scanLine can be an option for more control
-
-var createImage = function (w, h) {
-    var i = document.createElement("canvas");
-    i.width = w;
-    i.height = h;
-    i.ctx = i.getContext("2d");
-    return i;
-}
-
-var canvas = createImage(400, 400);
-var ctx = canvas.ctx;
-document.body.appendChild(canvas);
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-document.body.style.background = "#999";
-
-const quality = 500; // this value should be greater than the approx length of the bezier curve in pixels.
-var sWidth = 300;
-var sHeight = 100;
-var checkerSize = 20;
-var darkG = ctx.createLinearGradient(0, 0, 0, sHeight);
-var lightG = ctx.createLinearGradient(0, 0, 0, sHeight);
-for (var i = 0; i <= 1; i += 1 / 20) {
-    darkG.addColorStop(i, "rgba(0,0,0," + Math.pow(Math.sin(i * Math.PI), 2) + ")");
-    lightG.addColorStop(i, "rgba(255,255,255," + Math.pow(Math.sin(i * Math.PI), 2) + ")");
-}
-// draw checker pattern on source image
-var testImage = createImage(sWidth, sHeight);
-for (var i = 0; i < sHeight; i += checkerSize) {
-    for (var j = 0; j < sWidth; j += checkerSize) {
-        if (((i / checkerSize + j / checkerSize) % 2) === 0) {
-            testImage.ctx.fillStyle = darkG;
-        } else {
-            testImage.ctx.fillStyle = lightG;
-        }
-        testImage.ctx.fillRect(j, i, checkerSize, checkerSize);
-    }
-}
-
-// ctx.drawImage(testImage,0,0);
-// get source image as 32bit pixels (note Endian of this word does not effect the result)
-var sourcePixels = new Uint32Array(testImage.ctx.getImageData(0, 0, testImage.width, testImage.height).data.buffer);
-var pixelData;
-
-
-// variables for bezier functions.
-// keep these outside the function as creating them inside will have a performance/GC hit
 var x = 0;
 var y = 0;
 var v1 = {x, y};
@@ -57,17 +9,14 @@ var p = {x, y};
 var curvePos = {x, y};
 var c1, u1, u, b1, a, b, c, d, e, vx, vy;
 var bez = {};
-bez.p1 = {x: 40, y: 40};  // start
-bez.p2 = {x: 360, y: 360}; // end
-bez.cp1 = {x: 360, y: 40}; // first control point
-bez.cp2 = {x: 40, y: 360}; // second control point if undefined then this is a quadratic
+bez.p1 = {x: 40, y: 40};
+bez.p2 = {x: 360, y: 360};
+bez.cp1 = {x: 360, y: 40};
+bez.cp2 = {x: 40, y: 360};
 
-// This is a search and is thus very very slow.
-// get the unit pos on the bezier that is closest to the point point
-// resolution is the search steps (default 100)
-// pos is a estimate of the pos, if given then a higher resolution search is done around this pos
+
 function getPosNearBezier(point, resolution, pos) {
-    // translate curve to make vec the origin
+
     v1.x = bez.p1.x - point.x;
     v1.y = bez.p1.y - point.y;
     v2.x = bez.p2.x - point.x;
@@ -128,7 +77,7 @@ function getPosNearBezier(point, resolution, pos) {
     return pos;
 };
 
-function tangentAt(position) {  // returns the normalised tangent at position
+function tangentAt(position) {
     if (bez.cp2 === undefined) {
         a = (1 - position) * 2;
         b = position * 2;
@@ -164,8 +113,8 @@ function scanLine(y) {
         p.x = x;
         p.y = y;
         var bp = getPosNearBezier(p, quality);
-        if (bp >= 0 && bp <= 1) { // is along curve
-            tng = tangentAt(bp); // get tangent so that we can find what side of the curve we are
+        if (bp >= 0 && bp <= 1) {
+            tng = tangentAt(bp)
             vx = curvePos.x - x;
             vy = curvePos.y - y;
             var dist = Math.sqrt(vx * vx + vy * vy);
@@ -183,8 +132,6 @@ function scanLine(y) {
 }
 
 var scanY = 0;
-
-// scan all pixels on canvas
 function scan() {
     scanLine(scanY);
     scanY += 1;
@@ -193,12 +140,10 @@ function scan() {
     }
 }
 
-// draw curve
 ctx.fillStyle = "blue";
 ctx.lineWidth = 4;
 ctx.beginPath();
 ctx.moveTo(bez.p1.x, bez.p1.y);
 ctx.bezierCurveTo(bez.cp1.x, bez.cp1.y, bez.cp2.x, bez.cp2.y, bez.p2.x, bez.p2.y);
 ctx.stroke();
-//start scan
 scan();

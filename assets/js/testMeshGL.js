@@ -1,19 +1,22 @@
-const SAMPLE_STEP = 1;
+const SAMPLE_STEP = 10;
 let gl;
+let meshHeight = 0.3
 
-function makeMapping(path, stripe) {
+function makeMapping(path, stripe, heightEncoding = undefined) {
+    prepMapping()
+    stripe = mergeSlits()
 
     const ref = document.getElementById("main");
 
     const canvas = new OffscreenCanvas(ref.width, ref.height);
 
 
-     gl = canvas.getContext("webgl");
+    gl = canvas.getContext("webgl");
     if (!gl) throw "WebGL not supported";
 
 
     const samples = buildSamples(path, SAMPLE_STEP);
-    const mesh = buildMesh(samples, stripe.height*0.2);
+    const mesh = buildMesh(samples, stripe.height * meshHeight, heightEncoding);
 
     const program = gl.createProgram();
     gl.attachShader(program, shader(gl.VERTEX_SHADER, `
@@ -37,7 +40,6 @@ void main() {
 
     gl.linkProgram(program);
     gl.useProgram(program);
-
 
 
     function buffer(type, data, attr, size) {
@@ -79,7 +81,7 @@ void main() {
     gl.drawElements(gl.TRIANGLES, mesh.idx.length, gl.UNSIGNED_SHORT, 0);
 
 
-    ref.getContext("2d").drawImage(canvas,0,0);
+    ref.getContext("2d").drawImage(canvas, 0, 0);
 }
 
 
@@ -113,14 +115,38 @@ function buildSamples(path, step) {
     }
     return s;
 }
-// mesh stuff
-function buildMesh(samples, h) {
+
+function buildMesh(samples, h, hEncode) {
     const pos = [];
     const uv = [];
     const idx = [];
-    const hh = h / 2;
+    let hh = h / 2;
+    let step, it, tn = 0
+    let interpol
+
+    if (hEncode) {
+        step = Math.floor(samples.length / hEncode.length)
+        it = 0
+        tn = 0
+         interpol = d3.scaleLinear([0,step],[hEncode[0], hEncode[1]]);
+    }
 
     samples.forEach((p, i) => {
+
+
+        if (hEncode) {
+            if (it < step) {
+                // console.log(hEncode[i]);
+                hh = (h / 2) * interpol(it);
+                ++it
+            } else {
+                ++tn
+                it = 0
+                interpol.range([hEncode[tn-1],hEncode[tn]])
+            }
+        }
+
+
         const nx = Math.cos(p.angle + Math.PI / 2);
         const ny = Math.sin(p.angle + Math.PI / 2);
         const u = i / (samples.length - 1);

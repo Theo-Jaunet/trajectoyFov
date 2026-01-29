@@ -5,7 +5,7 @@ let gframes = []
 let dev = false
 let vidSize = {width: 800, height: 600};
 let keymap = {}
-
+let cv
 async function setup() {
 
     // iniStripe()
@@ -88,6 +88,23 @@ async function setup() {
 
     }
 
+    document.getElementById("meshHeight").oninput = async e => {
+
+        // console.log(+e.target.value);
+        meshHeight = +e.target.value
+        let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
+
+        makeMapping(stroke.map(d=>{return {x:d[0],y:d[1]}}), can)
+
+    }
+
+    document.getElementById("trajectoryFile").onchange = async e => {
+
+        dataDispatcher(e.target.files[0],e)
+    }
+
+
+
     makeClientStripe()
     document.getElementById("moreStripe").onclick = async e => {
         makeClientStripe()
@@ -150,3 +167,10 @@ onkeydown = function (e) {
     }
 
 }
+
+function onOpenCvReady(e) {
+    cv = window.cv
+    console.log("OpenCV loaded");
+    // tracker = createCameraPathTracker();
+}
+

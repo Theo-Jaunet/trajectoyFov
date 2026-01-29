@@ -41,10 +41,10 @@ function makeClientStripe() {
     tcan.onclick = async e => {
 
         let rect = tcan.getBoundingClientRect()
-        console.log(rect.width,"canSize");
-        console.log(e.offsetX,"offsetX");
+        console.log(rect.width, "canSize");
+        console.log(e.offsetX, "offsetX");
         const ratio = e.offsetX / rect.width
-        console.log(ratio,"ratio");
+        console.log(ratio, "ratio");
         updateVid(ratio)
 
     }
@@ -248,7 +248,7 @@ function prepSvg(type, n) {
                 .on("drag", dragged)
                 .on("end", dragended));
 
-        slitLine(gframes,...stripes[selectedStripe].points,selectedStripe)
+        slitLine(gframes, ...stripes[selectedStripe].points, selectedStripe)
     }
 }
 
@@ -259,11 +259,11 @@ function dragstarted() {
 
 function dragged(event) {
     const elem = d3.select(this)
-    elem.raise().attr("cx", event.x).attr("cy",  event.y);
+    elem.raise().attr("cx", event.x).attr("cy", event.y);
 
-    let id = +elem.attr("id").slice(- 1) -1
+    let id = +elem.attr("id").slice(-1) - 1
 
-    stripes[selectedStripe].points[id] = {x: event.x/vidSize.width, y: event.y/vidSize.height};
+    stripes[selectedStripe].points[id] = {x: event.x / vidSize.width, y: event.y / vidSize.height};
 
     d3.select("#slitLine")
         .attr("x1", vidSize.width * stripes[selectedStripe].points[0].x)
@@ -277,7 +277,7 @@ function dragended() {
     d3.select(this).attr("stroke", null);
 
 
-    slitLine(gframes,...stripes[selectedStripe].points,selectedStripe)
+    slitLine(gframes, ...stripes[selectedStripe].points, selectedStripe)
 }
 
 
@@ -309,4 +309,35 @@ function updateVid(ratio) {
 
     const vid = document.getElementById('mainVideo');
     vid.currentTime = vid.duration * ratio;
+}
+
+
+function mergeSlits() {
+    let tH = 0
+    let mW = 0
+
+
+    for (let i = 0; i < nStripe; i++) {
+        let can = d3.select(`.stripeCan[row='${i}'`).node()
+        tH += can.height
+        mW = (can.width > mW ? can.width : mW)
+    }
+
+    let ref = document.createElement("canvas");
+    ref.width = mW;
+    ref.height = tH;
+    let tcon = ref.getContext("2d")
+
+    let currH = 0
+    for (let i = 0; i < nStripe; i++) {
+        let can = d3.select(`.stripeCan[row='${i}'`).node()
+        tcon.drawImage(can, 0, currH, mW, can.height)
+        currH += can.height
+    }
+
+
+    // document.getElementById("debugger").appendChild(ref)
+
+    return ref
+
 }
