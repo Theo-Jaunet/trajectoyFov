@@ -78,8 +78,6 @@ function iniStripe() {
     ctx.fillRect(0, can.height / 2, can.width, can.height);
 
     // debugSquares(can)
-
-
 }
 
 
@@ -149,7 +147,6 @@ function rectMatch(pts, height, type = 'pointWise') {
 }
 
 function slitEvents(row) {
-
 
     row.onclick = (e) => {
         const el = e.target;
