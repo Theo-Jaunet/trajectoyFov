@@ -1,3 +1,4 @@
+let tracker;
 function drawMotion(path, ctx) {
 
     for (let i = 1; i < path.length; i++) {
@@ -10,7 +11,7 @@ function drawMotion(path, ctx) {
     }
 }
 
-let tracker;
+
 
 
 function computePath(frames) {

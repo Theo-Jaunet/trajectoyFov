@@ -1,9 +1,37 @@
 //THis approach is using sparse optical flow
 //follow this guide: https://learnopencv.com/optical-flow-in-opencv/
 
-const nfeatures = 100;
+const nfeatures = 200;
 const nORB = 2000
 
+
+function estimationLoop(frames) {
+    let main = document.getElementById("main");
+    let res = []
+
+    let traj = [[main.width / 2, main.height / 2]]
+    for (let i = 1; i < frames.length; i++) {
+        let coords = estimateCameraMotion(frames[i - 1], frames[i]);
+
+        traj[i] = [traj[i - 1][0] + coords.translation.dx, traj[i - 1][1] + coords.translation.dy];
+
+        // console.log(coords);
+        res.push(coords);
+
+    }
+
+
+    let cont = main.getContext("2d")
+
+
+
+    let xScale = d3.scaleLinear(d3.extent(traj.map(d => d[0])), [0, main.width])
+    let yScale = d3.scaleLinear(d3.extent(traj.map(d => d[1])), [0, main.height])
+    traj = traj.map(d => [xScale(d[0]), yScale(d[1])])
+    draw(cont, traj)
+
+    return res
+}
 
 
 function estimateCameraMotion(canvasPrev, canvasCurr) {

@@ -29,7 +29,7 @@ async function mediaFramesTest(file) {
 
 
             const svg = d3.select("#videoOverlay")
-            let fps = 1
+            let fps = 0.2
             let timestamps = [...Array(parseInt(duration)).keys()]
             if (duration > totalFramesThreshold) {
 

@@ -1,4 +1,4 @@
-const SAMPLE_STEP = 10;
+const SAMPLE_STEP = 1;
 let gl;
 let meshHeight = 0.3
 

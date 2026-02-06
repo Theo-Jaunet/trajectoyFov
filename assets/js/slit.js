@@ -61,8 +61,11 @@ function slitLine(frames, pt1, pt2, n) {
 }
 
 function slitRect(frames, rect, n) {
-    let sampleWidth = 10
-    let sampleHeight = 150
+    let sampleWidth = 120
+    let sampleHeight = 120
+
+
+    frames = frames.filter((d, i) => i % 8 === 0) // temp filter
 
     const timeLength = [...Array(frames.length).keys()].map(d => Math.max(Math.sin(d / frames.length) * 100, sampleWidth))
 
@@ -118,10 +121,13 @@ function slitRect(frames, rect, n) {
     if (stroke.length > 0) {
 
 
+        /*        makeMapping(stroke.map(d => { //to encode height
+                    return {x: d[0], y: d[1]}
+                }), can,snake(stroke))*/
 
         makeMapping(stroke.map(d => {
             return {x: d[0], y: d[1]}
-        }), can,snake(stroke))
+        }), can)
 
 
     }
@@ -181,8 +187,8 @@ function flipForFoV(can) {
 
     // inverted for referencial shenanigans
     let w = can.height
-    // let h = can.width
-    let h = 20
+    let h = can.width
+    // let h = 20
     tcan.width = w
     tcan.height = h
 
