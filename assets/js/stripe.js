@@ -26,10 +26,16 @@ function makeClientStripe() {
     </div>
     <div class ="stripeFps">
         <p >Sample Fps: </p>
-        <span>1 frame every <input type="number" min="1" max="10" step="1" value="1"/>second </span>
+        <span>each <input type="number" class="fpsSelect" row="${nStripe}" min="1" max="10" step="1" value="1"/> frame</span>
         
     </div>
-    <button class="stripeRun wrongButton">Run</button>
+     <div class ="sampleSize">
+       <p> Sample Size: </p>
+        <span>W <input class="samplew" row="${nStripe}" type="number" min="1"  step="1" value="50"/>px </span>
+            <span>h<input class="sampleh" row="${nStripe}" type="number" min="1"  step="1" value="10"/>px </span>
+    <div>
+    
+</div>
     `
     row.appendChild(options)
     row.appendChild(tcan)
@@ -48,7 +54,6 @@ function makeClientStripe() {
         updateVid(ratio)
 
     }
-
 }
 
 
@@ -183,8 +188,29 @@ function slitEvents(row) {
             const n = +el.getAttribute("row")
             stripes[n].fov = el.checked
             makeSlit(stripes[n])
-        }
+        } else if (el.matches(".samplew")) {
+            const n = +el.getAttribute("row")
+            stripes[n].size[0] = +el.getAttribute("value")
+        } else if (el.matches(".samplew")) {
+            const n = +el.getAttribute("row")
+            if (stripes[n].size) {
+                stripes[n].size[0] = +el.getAttribute("value")
+            } else {
+                stripes[n].size = [+el.getAttribute("value"), 50]
+            }
 
+        } else if (el.matches(".sampleh")) {
+            const n = +el.getAttribute("row")
+
+            if (stripes[n].size) {
+                stripes[n].size[1] = +el.getAttribute("value")
+            } else {
+                stripes[n].size = [10, +el.getAttribute("value")]
+            }
+        } else if (el.matches(".fpsSelect")) {
+            const n = +el.getAttribute("row")
+            stripes[n].fps = +el.getAttribute("value")
+        }
     }
 }
 

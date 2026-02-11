@@ -44,11 +44,21 @@
     border-radius: 5px;
 }
 
-.stripeTypes {
+.stripeTypes, .sampleSize {
     display: flex;
     justify-content: stretch;
     column-gap: 10px;
 }
+
+
+.sampleSize p {
+    vertical-align: middle;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 0 !important;
+
+}
+
 
 .stripeTypes p {
     vertical-align: middle;
@@ -62,6 +72,10 @@ span input {
     width: 46px;
     padding: 0 !important;
     height: 25px !important;
+}
+
+.stripeFps {
+    height: 44px;
 }
 
 .stripeFps p {
