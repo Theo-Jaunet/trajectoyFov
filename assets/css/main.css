@@ -7,13 +7,13 @@
 
 .stripeRow {
     border-radius: 5px;
-    width: 85%;
+    width: 95%;
     margin-bottom: 0;
     border: 1px solid #555;
     height: 100px;
     display: flex;
     float: right;
-    margin-top:5px;
+    margin-top: 5px;
 }
 
 .stripeRow canvas {
@@ -25,7 +25,7 @@
 }
 
 .stripeRow .slitInfo {
-    width: 20%;
+    width: 25%;
     padding-left: 3px;
 }
 
@@ -35,6 +35,7 @@
     height: 22px;
     cursor: pointer;
 }
+
 .fovRadio {
     height: 13px;
     margin-bottom: 2px;
@@ -47,9 +48,13 @@
 .stripeTypes, .sampleSize {
     display: flex;
     justify-content: stretch;
-    column-gap: 10px;
+    column-gap: 4px;
+    height: 23px;
 }
 
+.sampleSize span {
+    display: flex;
+}
 
 .sampleSize p {
     vertical-align: middle;
@@ -75,13 +80,18 @@ span input {
 }
 
 .stripeFps {
-    height: 44px;
+    /*height: 44px;*/
+    display: flex;
 }
 
 .stripeFps p {
     font-weight: 600;
     font-size: 13px;
     margin-bottom: 0 !important;
+}
+
+.stripeFps span input {
+    margin-bottom: 3px;
 }
 
 .stripeRun {
@@ -108,6 +118,18 @@ span input {
 
 }
 
+.sampleScale {
+    display: flex;
+}
+
+
+.sampleScale p {
+    vertical-align: middle;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 0 !important;
+}
+
 #videoOverlay {
     position: absolute;
     top: 0px;
@@ -130,5 +152,11 @@ span input {
 
 #pointer1:hover, #pointer2:hover {
 
-   fill: #cf3e3e !important;
+    fill: #cf3e3e !important;
+}
+
+.delRowImg {
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
 }

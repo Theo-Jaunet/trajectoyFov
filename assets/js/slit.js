@@ -35,6 +35,16 @@ function slitLine(frames, pt1, pt2, n) {
     let mainCtx = main.getContext("2d")
 
 
+    let stripe = stripes[n]
+    let tfps = 1
+    if (stripe.fps) {
+        tfps = stripe.fps
+    }
+
+    if (tfps > 1) {
+        frames = frames.filter((d, i) => i % tfps === 0) // temp filter
+    }
+
     for (let i = 0; i < frames.length; i++) {
 
         let pixels = getPixelsOnLine(frames[i].getContext("2d"), pt1.x * imw, pt1.y * imh, pt2.x * imw, pt2.y * imh)
@@ -61,23 +71,44 @@ function slitLine(frames, pt1, pt2, n) {
 }
 
 function slitRect(frames, rect, n) {
-    let sampleWidth = 120
-    let sampleHeight = 120
+    let tsize = defaultSampleSize
+    let stripe = stripes[n]
+    let skew = false
+    // let skew = stripe.skew
+    let angle = 30
+
+    let tfps = 1
 
 
-    frames = frames.filter((d, i) => i % 8 === 0) // temp filter
+    if (stripe?.size) {
+        tsize = stripe.size
+    }
+    if (stripe?.fps) {
+        tfps = stripe.fps
+    }
+    let [sampleWidth, sampleHeight] = tsize
 
+    if (tfps > 1) {
+        frames = frames.filter((d, i) => i % tfps === 0) // temp filter
+    }
     const timeLength = [...Array(frames.length).keys()].map(d => Math.max(Math.sin(d / frames.length) * 100, sampleWidth))
 
     let can = d3.select(`.stripeCan[row='${n}'`).node()
 
     const ctx = can.getContext("2d")
     // ctx.imageSmoothingEnabled= false
-    ctx.filter = "blur(3px)";
+    // ctx.filter = "blur(3px)";
     let x = Math.floor(frames[0].width * rect.x)
     let w = Math.floor(frames[0].width * rect.width)
     let h = Math.floor(frames[0].height * rect.height)
     let y = Math.floor(frames[0].height * rect.y)
+
+    let srcPts = [
+        {x: 0, y: 0},
+        {x: frames[0].width * 0.4, y: 0},
+        {x: frames[0].width * 0.3, y: frames[0].height * 0.8},
+        {x: 0, y: frames[0].height}
+    ]
 
 
     // console.log(x,y,w,h)
@@ -92,7 +123,7 @@ function slitRect(frames, rect, n) {
     let trect = can.getBoundingClientRect()
 
     if (can.width < trect.width) {
-        can.style.width = can.width + 'px'
+        // can.style.width = can.width + 'px'
     }
     can.height = sampleHeight
 
@@ -110,11 +141,25 @@ function slitRect(frames, rect, n) {
         if (stripes[selectedStripe].fov) {
             let temp = flipForFoV(tcan)
             ctx.drawImage(temp, sampleWidth * i, 0, sampleWidth, can.height)
-        } else {
-            ctx.drawImage(tcan, sampleWidth * i, 0, sampleWidth, can.height)
+        } else if (stripes[selectedStripe].flip) {
+            let temp = flip180(tcan)
+            ctx.drawImage(temp, sampleWidth * i, 0, sampleWidth, can.height)
+        } else if (skew) {
+
+            // let temp = document.createElement("canvas")
+            // let tempCont = temp.getContext("2d")
+            // ctx.save()
+            // ctx.setTransform(1, Math.tan(angle), 0, 1, 0, 0);
+            const ne = toPerspective(frames[i], srcPts, [200, 200])
+            // let temp = flipForFoV(ne)
+            ctx.drawImage(ne, sampleWidth * i, 0, sampleWidth, can.height)
+            // ctx.drawImage(tcan, sampleWidth * i, 0, sampleWidth, can.height)
+            // ctx.restore()
 
             // ctx.drawImage(tcan, total, 0, timeLength[i], can.height)
             // total+= timeLength[i]
+        } else {
+            ctx.drawImage(tcan, sampleWidth * i, 0, sampleWidth, can.height)
         }
     }
 
@@ -185,7 +230,7 @@ function flipForFoV(can) {
 
     // let container = document.getElementById("debugger")
 
-    // inverted for referencial shenanigans
+    // inverted for referential shenanigans
     let w = can.height
     let h = can.width
     // let h = 20
@@ -201,4 +246,47 @@ function flipForFoV(can) {
     // container.append(tcan)
 
     return tcan;
+}
+
+function flip180(can) {
+    let tcan = document.createElement("canvas")
+    let tcont = tcan.getContext("2d")
+
+    // let container = document.getElementById("debugger")
+
+    // inverted for referential shenanigans
+    let w = can.width
+    let h = can.height
+    // let h = 20
+    tcan.width = w
+    tcan.height = h
+
+    tcont.translate(w / 2, h / 2);
+    tcont.rotate(180 * (Math.PI / 180));
+
+    // tcont.drawImage(can, 0, 0, can.width, can.height, -h / 2, -w / 2, h,w)
+    tcont.drawImage(can, 0, 0, can.width, can.height, -w / 2, -h / 2, w, h)
+
+    // container.append(tcan)
+
+    return tcan;
+}
+
+function slitTriangle(frames, n) {
+    let tsize = defaultSampleSize
+    let stripe = stripes[n]
+
+    let tfps = 1
+
+    if (stripe.size) {
+        tsize = stripe.size
+    }
+    if (stripe.fps) {
+        tfps = stripe.fps
+    }
+    let [sampleWidth, sampleHeight] = tsize
+
+    if (tfps > 1) {
+        frames = frames.filter((d, i) => i % tfps === 0) // temp filter
+    }
 }

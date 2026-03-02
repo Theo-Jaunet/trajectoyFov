@@ -6,6 +6,59 @@ let dev = false
 let vidSize = {width: 800, height: 600};
 let keymap = {}
 let cv
+
+
+/*let presetStripes= {
+    0: {
+        type: "rect",
+        rect: {x: 0, y: 0,width: 0.8, height: 0.8},
+    },
+    1: {
+        type: "rect",
+        rect: {x: 0, y: 0,width: 0.8, height: 0.8},
+        fov:true,
+        skew:true,
+    },
+    2: {
+        type: "rect",
+        rect: {x: 0, y: 0,width: 0.8, height: 0.8},
+        flip:true
+    }
+}*/
+
+let presetStripes = {
+    0: {
+        type: "rect",
+        rect: {
+            x: 0.22613713406253977,
+            y: 0.09173485117172527,
+            width: 0.020366598778004074,
+            height: 0.6857555882197442
+        }
+    },
+    "1": {
+        "type": "rect",
+        "rect": {
+            "x": 0.18540393650653164,
+            "y": 0.7522257603327268,
+            "width": 0.6741344040134531,
+            "height": 0.014436959462138669
+        },
+        "fov": true,
+        "skew": false
+    },
+    "2": {
+        "type": "rect",
+        "rect": {
+            "x": 0.831025102230779,
+            "y": 0.04842398655346671,
+            "width": 0.002036659877800407,
+            "height": 0.7687682015041437
+        },
+        "flip": true
+    }
+}
+
 async function setup() {
 
     // iniStripe()
@@ -58,7 +111,8 @@ async function setup() {
         vidUrl = URL.createObjectURL(e.target.files[0])
         console.log(vidUrl);
         document.getElementById("mainSource").src = vidUrl
-
+        let svg = document.getElementById("videoOverlay")
+        svg.style.display = "inline-block"
         vid.load()
 
 
@@ -72,6 +126,7 @@ async function setup() {
               // gframes = r
               singleSlit(gframes)*/
         gframes = frames
+        svg.style.display = "none"
 
 
         //Pyramid stuff
@@ -96,18 +151,20 @@ async function setup() {
         meshHeight = +e.target.value
         let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
 
-        makeMapping(stroke.map(d=>{return {x:d[0],y:d[1]}}), can)
+        makeMapping(stroke.map(d => {
+            return {x: d[0], y: d[1]}
+        }), can)
 
     }
 
     document.getElementById("trajectoryFile").onchange = async e => {
 
-        dataDispatcher(e.target.files[0],e)
+        dataDispatcher(e.target.files[0], e)
     }
 
 
-
-    makeClientStripe()
+    // makeClientStripe()
+    loadPreset()
     document.getElementById("moreStripe").onclick = async e => {
         makeClientStripe()
     }
@@ -190,11 +247,8 @@ async function getVidFromUrl(url) {
         vidUrl = URL.createObjectURL(t)
 
 
-
-
         let frames = await mediaFramesTest(t)
         gframes = frames;
-
 
 
         const vid = document.getElementById("mainVideo")
@@ -214,4 +268,40 @@ async function getVidFromUrl(url) {
     } catch (error) {
         console.error(error.message);
     }
+}
+
+
+function testSack() {
+
+    let can = document.getElementById("testStack")
+    let ctx = can.getContext("2d");
+
+    let refW = gframes[0].width
+    let refH = gframes[0].height
+
+
+    can.width = refW
+    can.height = refH
+    let hstep = 2
+    let vstep = 1
+
+    for (let i = 0; i < gframes.length; i++) {
+
+        if (refH > vstep * i * 2 || refW > hstep * i * 2) {
+            ctx.drawImage(gframes[i],
+                50,
+                50,
+                refW - 110,
+                refH - 120,
+                i * hstep,
+                vstep * i,
+                Math.max(refW - (hstep * i * 2), 3),
+                Math.max(refH - (i * 2 * vstep), 3))
+        } else {
+            console.log(i);
+        }
+    }
+
+    // ctx.drawImage(gframes[20], i, i,refW-i*2,refH-i)
+
 }

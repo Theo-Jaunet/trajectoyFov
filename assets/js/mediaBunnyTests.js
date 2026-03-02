@@ -19,7 +19,7 @@ async function mediaFramesTest(file) {
             initSvg = true
             const stats = await videoTrack.computePacketStats(100);
             const frameRate = Math.round(stats.averagePacketRate);
-            console.log(frameRate);
+
             const sink = new Mediabunny.VideoSampleSink(videoTrack);
 
             can.width = videoTrack.displayWidth
@@ -30,16 +30,28 @@ async function mediaFramesTest(file) {
 
             const svg = d3.select("#videoOverlay")
             let fps = 0.2
-            let timestamps = [...Array(parseInt(duration)).keys()]
+            // let timestamps = [...Array(parseInt(duration)).keys()]
+            let timestamps = []
             if (duration > totalFramesThreshold) {
+                let nsec = 3
+                // fps = Math.floor(duration / totalFramesThreshold)
+                // timestamps = intervaler(timestamps.map((d, i) => i), fps)
+                let step = 1 / nsec
+                let target = duration * nsec
+                let cumul = 0
+                timestamps = []
+                for (let i = 0; i < target; i++) {
+                    timestamps.push(cumul)
+                    cumul += step
+                }
 
-                fps = Math.floor(duration / totalFramesThreshold)
-                timestamps = intervaler(timestamps.map((d, i) => i), fps)
+
             } else {
                 let target = totalFramesThreshold
                 let estimatedFrames = frameRate * duration
                 fps = (target * frameRate) / estimatedFrames
                 let step = 1 / fps
+                // let step = 1 / 3
                 let cumul = 0
                 timestamps = []
                 for (let i = 0; i < target; i++) {
@@ -47,7 +59,6 @@ async function mediaFramesTest(file) {
                     cumul += step
                 }
             }
-            console.log(timestamps);
 
             /*else if (duration < totalFramesThreshold) {
                 let tfps = Math.floor( totalFramesThreshold/duration)

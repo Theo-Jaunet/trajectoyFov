@@ -1,48 +1,66 @@
 let nStripe = 0
 let selectedStripe = null
 
-const stripes = {}
+let stripes = {}
 let slitEdit = false
+const defaultSampleSize = [10, 120]
 
-function makeClientStripe() {
 
+function makeClientStripe(n = undefined) {
     let container = document.getElementById('stripeList');
 
     let row = document.createElement("div")
     let options = document.createElement("div");
     let tcan = document.createElement("canvas");
 
+    let trow = (n !== undefined ? n : nStripe)
+
     row.setAttribute("class", "stripeRow")
     options.setAttribute("class", "slitInfo")
     tcan.setAttribute("class", "stripeCan")
-    tcan.setAttribute("row", nStripe)
+    tcan.setAttribute("row", trow)
 
     options.innerHTML = `
     <div class ="stripeTypes">
         <p>Sample Type:</p>
-        <img class="rectSlit" row="${nStripe}" src="assets/images/pictos/rect.png"/>
-        <img class="lineSlit" row="${nStripe}" src="assets/images/pictos/poly.png"/>
-        <div>Fov<input type="checkbox" class="fovRadio" row="${nStripe}"> </div>
+        <img class="rectSlit" row="${trow}" src="assets/images/pictos/rect.png"/>
+        <img class="lineSlit" row="${trow}" src="assets/images/pictos/poly.png"/>
+        <div>Fov<input type="checkbox" class="fovRadio" row="${trow}"> </div>
+        <div>Skew<input type="checkbox" class="skewRadio" row="${trow}"> </div>
+        <div>Flip<input type="checkbox" class="flipRadio" row="${trow}"> </div>
     </div>
     <div class ="stripeFps">
-        <p >Sample Fps: </p>
-        <span>each <input type="number" class="fpsSelect" row="${nStripe}" min="1" max="10" step="1" value="1"/> frame</span>
-        
+        <p> Sample Fps: </p>
+        <span>each <input type="number" class="fpsSelect" row="${trow}" min="1"  step="1" value="1"/> frame</span>
+
     </div>
      <div class ="sampleSize">
        <p> Sample Size: </p>
-        <span>W <input class="samplew" row="${nStripe}" type="number" min="1"  step="1" value="50"/>px </span>
-            <span>h<input class="sampleh" row="${nStripe}" type="number" min="1"  step="1" value="10"/>px </span>
-    <div>
+        <span>w <input class="samplew" row="${trow}" type="number" min="1"  step="1" value="${defaultSampleSize[0]}"/>px </span>
+            <span>h<input class="sampleh" row="${trow}" type="number" min="1"  step="1" value="${defaultSampleSize[1]}"/>px </span>
+    </div>
+    
+         <div class ="sampleScale">
+       <p> Sample Scale: </p>
+        <span>Scale <input class="sampleSc" row="${trow}" type="number" min="0.1" max="2"  step="0.1" value="1"/> </span>
+         
+    </div>
     
 </div>
     `
+    let tcross = document.createElement("div");
+    tcross.setAttribute("row", trow)
+    tcross.innerHTML = `<img row="${trow}" class="delRowImg" src="assets/images/pictos/cross.png"/>`
+    row.appendChild(tcross)
     row.appendChild(options)
     row.appendChild(tcan)
     container.appendChild(row)
     slitEvents(row)
-    stripes[nStripe] = {}
-    ++nStripe
+    if (n === undefined) {
+        stripes[nStripe] = {}
+        ++nStripe
+    }
+
 
     tcan.onclick = async e => {
 
@@ -52,7 +70,6 @@ function makeClientStripe() {
         const ratio = e.offsetX / rect.width
         console.log(ratio, "ratio");
         updateVid(ratio)
-
     }
 }
 
@@ -161,6 +178,7 @@ function slitEvents(row) {
 
         if (el.matches(".rectSlit")) {
             const n = +el.getAttribute("row")
+            selectedStripe = n
             if (!slitEdit) {
                 slitEdit = true
                 el.classList.add("slitEdit");
@@ -174,6 +192,7 @@ function slitEvents(row) {
 
         } else if (el.matches(".lineSlit")) {
             const n = +el.getAttribute("row")
+            selectedStripe = n
             if (!slitEdit) {
                 slitEdit = true
                 el.classList.add("slitEdit");
@@ -187,29 +206,51 @@ function slitEvents(row) {
         } else if (el.matches(".fovRadio")) {
             const n = +el.getAttribute("row")
             stripes[n].fov = el.checked
+            selectedStripe = n
             makeSlit(stripes[n])
         } else if (el.matches(".samplew")) {
             const n = +el.getAttribute("row")
-            stripes[n].size[0] = +el.getAttribute("value")
-        } else if (el.matches(".samplew")) {
-            const n = +el.getAttribute("row")
             if (stripes[n].size) {
-                stripes[n].size[0] = +el.getAttribute("value")
+                stripes[n].size[0] = +el.value
             } else {
-                stripes[n].size = [+el.getAttribute("value"), 50]
+                stripes[n].size = [+el.value, defaultSampleSize[1]]
             }
-
+            selectedStripe = n
+            makeSlit(stripes[n])
         } else if (el.matches(".sampleh")) {
+            console.log("here");
             const n = +el.getAttribute("row")
 
             if (stripes[n].size) {
-                stripes[n].size[1] = +el.getAttribute("value")
+                stripes[n].size[1] = +el.value
             } else {
-                stripes[n].size = [10, +el.getAttribute("value")]
+                stripes[n].size = [defaultSampleSize[0], +el.value]
             }
+            selectedStripe = n
+            makeSlit(stripes[n])
         } else if (el.matches(".fpsSelect")) {
             const n = +el.getAttribute("row")
-            stripes[n].fps = +el.getAttribute("value")
+            stripes[n].fps = +el.value
+            selectedStripe = n
+            makeSlit(stripes[n])
+        } else if (el.matches(".sampleSc")) {
+            const n = +el.getAttribute("row")
+            stripes[n].scale = +el.value
+            selectedStripe = n
+            // makeSlit(stripes[n])
+        } else if (el.matches(".skewRadio")) {
+            const n = +el.getAttribute("row")
+            stripes[n].skew = el.checked
+            selectedStripe = n
+        } else if (el.matches(".flipRadio")) {
+            const n = +el.getAttribute("row")
+            stripes[n].flip = el.checked
+            selectedStripe = n
+            makeSlit(stripes[n])
+        } else if (el.matches(".delRowImg")) {
+            const n = +el.getAttribute("row")
+            row.remove()
+            delete stripes[n]
         }
     }
 }
@@ -342,28 +383,92 @@ function mergeSlits() {
     let tH = 0
     let mW = 0
 
+    // let distribution = [1, 0.5]
+    let scale = 1
+    // let i = 0
+    for (const [key, value] of Object.entries(stripes)) {
+        // console.log(key);
+        let can = d3.select(`.stripeCan[row='${key}'`).node()
 
-    for (let i = 0; i < nStripe; i++) {
-        let can = d3.select(`.stripeCan[row='${i}'`).node()
-        tH += can.height
+        if (stripes[key].scale) {
+            scale = stripes[key].scale
+        } else {
+            scale = 1
+        }
+
+        tH += can.height * scale
         mW = (can.width > mW ? can.width : mW)
     }
+
 
     let ref = document.createElement("canvas");
     ref.width = mW;
     ref.height = tH;
     let tcon = ref.getContext("2d")
 
+    // document.getElementById("debugger").appendChild(ref)
     let currH = 0
-    for (let i = 0; i < nStripe; i++) {
-        let can = d3.select(`.stripeCan[row='${i}'`).node()
-        tcon.drawImage(can, 0, currH, mW, can.height)
-        currH += can.height
+    const angle = 30 * Math.PI / 180;
+    for (const [key, value] of Object.entries(stripes)) {
+        let can = d3.select(`.stripeCan[row='${key}'`).node()
+        let tth = 0
+
+        if (stripes[key].scale) {
+            scale = stripes[key].scale
+        } else {
+            scale = 1
+        }
+        tth += can.height * scale
+        /*        if (nStripe === distribution.length) {
+                    //
+                } else {
+                    tth += can.height
+                }*/
+
+        if (stripes[key].skew) {
+
+            // tcon.setTransform(1, Math.tan(angle), 0, 1, 0, 0);
+            tcon.transform(1, 0, Math.tan(angle), 1, 0, 0);
+            tcon.drawImage(can, -60, currH, mW - 60, tth)
+            tcon.resetTransform()
+        } else if (stripes[key].flip) {
+            tcon.drawImage(can, 30, currH, mW + 60, tth)
+        } else {
+            tcon.drawImage(can, 30, currH, mW + 60, tth)
+        }
+
+        currH += tth
     }
 
 
-    // document.getElementById("debugger").appendChild(ref)
+    document.getElementById("debugger").appendChild(ref)
 
     return ref
 
+}
+
+
+function loadPreset() {
+    stripes = {}
+
+    document.getElementById("stripeList").innerHTML = ''
+
+
+    for (const [key, value] of Object.entries(presetStripes)) {
+        stripes[key] = value
+        selectedStripe = key
+        makeClientStripe(key)
+        makeSlit(value)
+    }
+
+/*    for (let i = 0; i < keys.length; i++) {
+
+        selectedStripe = keys[i]
+        console.log(keys[i]);
+        makeClientStripe(keys[i])
+        makeSlit(stripes[keys[i]])
+    }*/
+    const keys = Object.keys(stripes)
+    nStripe = keys.length
+    // mak
 }
