@@ -2,12 +2,15 @@ const SAMPLE_STEP = 1;
 let gl;
 let meshHeight = 0.3
 
-function makeMapping(path, stripe, heightEncoding = undefined) {
+function makeMapping(path, heightEncoding = undefined) {
     prepMapping()
-    stripe = mergeSlits()
+    drawWaypoints()
+    let stripe = mergeSlits()
 
-    const ref = document.getElementById("main");
-
+    let ref = document.getElementById("main");
+        if (mapFlag) {
+            ref =mapCan
+        }
     const canvas = new OffscreenCanvas(ref.width, ref.height);
 
 

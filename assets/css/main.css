@@ -160,3 +160,70 @@ span input {
     height: 25px;
     cursor: pointer;
 }
+
+#stripeBrush {
+    border: #555555 1px solid;
+    border-radius: 5px;
+    position: absolute;
+    left: 28.5%;
+    width: 72%;
+    background-color: rgba(149, 148, 148, 0.24);
+    display: none;
+}
+
+.stripeBrushBtn {
+    width: 20px;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.selectedBrush {
+
+    border: #cf3e3e 1px solid !important;
+
+}
+
+
+/*SIDE PANEL FOR PHOTOS*/
+
+#sidebar {
+    width: 250px;
+    /*background-color: #fff;*/
+    right: 0;
+    height: 54vh;
+
+    /*top: 0;*/
+    /*height: 34vh;*/
+
+    z-index: 99;
+    text-align: center;
+    padding: 3px;
+    border-radius: 5px;
+
+    border: solid 1px #717171;
+
+}
+
+#sidebar h5 {
+    font-size: 1.9rem;
+    font-weight: 550;
+    padding: 5px;
+    box-shadow: 0px 40px 1px -40px #555555;
+    margin-bottom: 5px;
+}
+
+.sideHeader div {
+    padding: 10px;
+    user-select: none;
+    margin: auto; /* Magic! */
+}
+
+#strokeBtn, #cropBG, #mapToggle {
+    width: 20px;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}

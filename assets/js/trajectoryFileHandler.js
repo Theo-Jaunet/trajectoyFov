@@ -74,7 +74,7 @@ function gpx2Trace(records) {
     stroke = []
     for (let i = 0; i < records.length; i++) {
 
-        stroke.push(projection([records[i].longitude, records[i].latitude]))
+        stroke.push(projection([records[i].latitude, records[i].longitude]))
 
     }
 

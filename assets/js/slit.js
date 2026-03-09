@@ -172,7 +172,7 @@ function slitRect(frames, rect, n) {
 
         makeMapping(stroke.map(d => {
             return {x: d[0], y: d[1]}
-        }), can)
+        }))
 
 
     }

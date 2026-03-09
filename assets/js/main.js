@@ -7,7 +7,11 @@ let vidSize = {width: 800, height: 600};
 let keymap = {}
 let cv
 
+let bgImg
 
+let bgTransform = {x: 0, y: 0, scale: 1}
+
+let mapCan
 /*let presetStripes= {
     0: {
         type: "rect",
@@ -64,7 +68,7 @@ async function setup() {
     // iniStripe()
 
     await getVidFromUrl("assets/baseVid/trail.mp4")
-    initDraw()
+    iniCan()
     const vid = document.getElementById("mainVideo")
     if (dev) {
         const tcan = document.getElementById("main")
@@ -149,11 +153,16 @@ async function setup() {
 
         // console.log(+e.target.value);
         meshHeight = +e.target.value
-        let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
+        // let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
 
         makeMapping(stroke.map(d => {
             return {x: d[0], y: d[1]}
-        }), can)
+        }))
+
+
+        // panzoom.pan(10, 10)
+        // panzoom.zoom(2, { animate: true })
+
 
     }
 
@@ -162,14 +171,47 @@ async function setup() {
         dataDispatcher(e.target.files[0], e)
     }
 
+    document.getElementById("mainBg").onchange = async e => {
+
+        loadBG(e.target.files[0], e)
+    }
+
 
     // makeClientStripe()
     loadPreset()
     document.getElementById("moreStripe").onclick = async e => {
         makeClientStripe()
     }
+
+    document.getElementById("moreLabel").onclick = async e => {
+        makeNewLabel()
+    }
 }
 
+
+function loadBG(file, e) {
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+
+        // bgImg = loadImg(e.target.result)
+        bgImg = await addImageProcess(e.target.result)
+        drawBg()
+
+    }
+    reader.readAsDataURL(file);
+}
+
+
+function drawBg() {
+    let tcan = document.getElementById("main")
+    let tcon = tcan.getContext("2d")
+
+    let t = Math.round((bgImg.naturalHeight * tcan.getBoundingClientRect().width) / bgImg.naturalWidth)
+    let viewDim = [tcan.getBoundingClientRect().width, t]
+
+    tcon.drawImage(bgImg, 0, 0, viewDim[0], viewDim[1])
+}
 
 function testpreload() {
 

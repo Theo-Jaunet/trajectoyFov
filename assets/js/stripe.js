@@ -441,7 +441,11 @@ function mergeSlits() {
     }
 
 
-    document.getElementById("debugger").appendChild(ref)
+    if (intervals.length > 0) {
+        ref = stripeTransform(ref, intervals)
+    }
+
+    // document.getElementById("debugger").appendChild(ref)
 
     return ref
 
@@ -461,14 +465,19 @@ function loadPreset() {
         makeSlit(value)
     }
 
-/*    for (let i = 0; i < keys.length; i++) {
+    /*    for (let i = 0; i < keys.length; i++) {
 
-        selectedStripe = keys[i]
-        console.log(keys[i]);
-        makeClientStripe(keys[i])
-        makeSlit(stripes[keys[i]])
-    }*/
+            selectedStripe = keys[i]
+            console.log(keys[i]);
+            makeClientStripe(keys[i])
+            makeSlit(stripes[keys[i]])
+        }*/
     const keys = Object.keys(stripes)
     nStripe = keys.length
     // mak
+}
+
+function resetInterval() {
+    intervals = []
+    delBrush()
 }
