@@ -8,6 +8,7 @@ function makeNewLabel() {
     let container = document.getElementById("waypoints")
 
     waypoint.classList.add("waypoint")
+    waypoint.setAttribute("id", "waypoint" + nblab)
 
     let img = "assets/images/pictos/plus.png"
 
@@ -21,7 +22,7 @@ function makeNewLabel() {
                          <input type="range" min="0" max="1" step="0.01" oninput="updateRange(this,${nblab})" row="${nblab}" value="${trange}" class="waypointRange" />
                         </div>
      
-              <img class="deleteWaypoint" src="assets/images/pictos/cross.png" row="${nblab}" style="">
+              <img onclick="deleteWaypoint(${nblab})" row="${nblab}" class="deleteWaypoint" src="assets/images/pictos/cross.png" row="${nblab}" style="">
 </div>`
     waypoints[nblab] = {
         name: "PlaceHolder",
@@ -36,6 +37,12 @@ function makeNewLabel() {
 
 }
 
+function deleteWaypoint(row) {
+
+    let waypoint = document.getElementById("waypoint" + row)
+    waypoint.parentNode.removeChild(waypoint)
+    delete waypoints[row]
+}
 
 function updateName(elem, row) {
     let name = elem.value
