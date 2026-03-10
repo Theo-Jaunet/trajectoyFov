@@ -70,6 +70,7 @@ function makeClientStripe(n = undefined) {
         const ratio = e.offsetX / rect.width
         console.log(ratio, "ratio");
         updateVid(ratio)
+        testCube(Math.floor(ratio*gframes.length))
     }
 }
 

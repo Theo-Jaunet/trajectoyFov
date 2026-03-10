@@ -1,4 +1,4 @@
-let dataRecords
+let dataRecords = []
 
 
 function dataDispatcher(file) {

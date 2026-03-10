@@ -91,18 +91,30 @@ async function setup() {
         // slitSquare(gframes)
     }
 
+    vid.addEventListener("timeupdate", updateCube)
+
+
     document.getElementById("mainVideo").addEventListener("loadedmetadata", function (e) {
 
         let svg = document.getElementById("videoOverlay")
 
         let coords = vid.getBoundingClientRect()
-        console.log(coords);
+
         vid.controls = false
 
         svg.style.width = coords.width + "px";
         svg.style.height = coords.height + "px";
 
+        let stackCan = document.getElementById("testStack")
+
+        stackCan.style.width = coords.width + "px";
+        stackCan.style.height = coords.height + "px";
+
+        stackCan.width = coords.width
+        stackCan.height = coords.height
+
         vidSize = {width: coords.width, height: coords.height};
+        testCube(10)
 
         // let tcan = document.getElementById("tcan")
         // tcan.style.width = coords.width + "px";
@@ -130,6 +142,7 @@ async function setup() {
               // gframes = r
               singleSlit(gframes)*/
         gframes = frames
+        testCube(10)
         svg.style.display = "none"
 
 
@@ -174,6 +187,12 @@ async function setup() {
     document.getElementById("mainBg").onchange = async e => {
 
         loadBG(e.target.files[0], e)
+    }
+
+
+    document.getElementById("waypointFile").onchange = async e => {
+
+        loadWaypointImage(e.target.files[0], e)
     }
 
 
@@ -300,7 +319,6 @@ async function getVidFromUrl(url) {
         let svg = document.getElementById("videoOverlay")
 
         let coords = vid.getBoundingClientRect()
-        console.log(coords);
         vid.controls = false
 
         svg.style.width = coords.width + "px";
@@ -313,13 +331,20 @@ async function getVidFromUrl(url) {
 }
 
 
-function testSack() {
+function testSack(n = 0) {
+
+    let ratio = gframes[0].width / gframes[0].height
+    let maxW = 500
+    let maxH = maxW / ratio
+
+    let minW = 10
+    let minH = minW / ratio
 
     let can = document.getElementById("testStack")
     let ctx = can.getContext("2d");
 
-    let refW = gframes[0].width
-    let refH = gframes[0].height
+    let refW = Math.min(gframes[0].width, maxW)
+    let refH = Math.min(gframes[0].height, maxH)
 
 
     can.width = refW
@@ -327,23 +352,134 @@ function testSack() {
     let hstep = 2
     let vstep = 1
 
-    for (let i = 0; i < gframes.length; i++) {
+    let nFrames = (refW / hstep) / 2
 
-        if (refH > vstep * i * 2 || refW > hstep * i * 2) {
-            ctx.drawImage(gframes[i],
-                50,
-                50,
-                refW - 110,
-                refH - 120,
-                i * hstep,
-                vstep * i,
-                Math.max(refW - (hstep * i * 2), 3),
-                Math.max(refH - (i * 2 * vstep), 3))
-        } else {
-            console.log(i);
-        }
+    if (nFrames + n > gframes.length) {
+        nFrames = gframes.length - 1 - n
+    }
+    // console.log("for ",n, "we have ", nFrames);
+
+    for (let i = 0; i < nFrames; i++) {
+        let idx = n + i
+        ctx.drawImage(gframes[idx],
+            0,
+            0,
+            gframes[idx].width,
+            gframes[idx].height - 50, //to skip overlay on bike
+            i * hstep,
+            vstep * i,
+            Math.max(refW - (hstep * i * 2), minW),
+            Math.max(refH - (vstep * i * 2), minH))
+
+        // if (refH > vstep * i * 2 || refW > hstep * i * 2) {
+        /*            ctx.drawImage(gframes[i],
+                        50,
+                        50,
+                        refW - 110,
+                        refH - 120,
+                        i * hstep,
+                        vstep * i,
+                        Math.max(refW - (hstep * i * 2), 3),
+                        Math.max(refH - (i * 2 * vstep), 3))*/
+        // } else {
+        //     console.log(i);
+        // }
     }
 
     // ctx.drawImage(gframes[20], i, i,refW-i*2,refH-i)
 
+}
+
+
+function testCube(n) {
+    let ratio = gframes[0].width / gframes[0].height
+    let maxW = 500
+    let maxH = maxW / ratio
+
+    let can = document.getElementById("testStack")
+    let ctx = can.getContext("2d");
+
+    let refW = Math.min(gframes[0].width, maxW / 2)
+    let refH = Math.min(gframes[0].height, maxH / 2)
+
+
+    can.width = maxW
+    can.height = maxH
+
+    let hstep = (maxW - refW) / gframes.length
+    let vstep = (maxH - refH) / gframes.length
+
+    ctx.globalAlpha = 0.9;
+    for (let i = gframes.length - 1; i > 0; i--) {
+        if (i < n)
+            ctx.globalAlpha = 0;
+        ctx.drawImage(gframes[i],
+            0,
+            0,
+            gframes[i].width,
+            gframes[i].height - 50, //to skip overlay on bike
+            i * hstep,
+            maxH - (vstep * i) - refH,
+            refW,
+            refH)
+    }
+    ctx.globalAlpha = 1;
+    ctx.beginPath()
+    ctx.moveTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep + refW, maxH - (vstep * gframes.length) - refH)
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length) - refH)
+    ctx.lineTo(hstep + refW, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.stroke()
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.moveTo(hstep + refW, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep + refW, maxH)
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length))
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length) - refH)
+
+    ctx.stroke()
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.moveTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep, maxH - vstep)
+    ctx.lineTo(hstep + refW, maxH - vstep)
+
+
+    ctx.stroke()
+    ctx.closePath()
+
+
+}
+
+function updateCube(e) {
+    let elem = e.target || e.srcElement
+
+    let ratio = elem.currentTime / elem.duration
+
+    testCube(Math.min(Math.floor(ratio * gframes.length), gframes.length - 1))
+}
+
+
+async function testPyramidAnim() {
+    for (let i = 0; i < gframes.length - 1; i++) {
+        testSack(i);
+        await new Promise(r => setTimeout(r, 15));
+
+    }
+
+}
+
+function fakeVideo() {
+    document.getElementById("videoInput").click()
+}
+
+function fakeGpx() {
+    document.getElementById("trajectoryFile").click()
+}
+
+function fakeBg() {
+    document.getElementById("mainBg").click()
 }

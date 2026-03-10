@@ -2,6 +2,8 @@ let nblab = 0
 
 let waypoints = {}
 
+let trow
+let telem
 
 function makeNewLabel() {
     let waypoint = document.createElement("div")
@@ -15,7 +17,7 @@ function makeNewLabel() {
     let trange = Math.random()
 
     waypoint.innerHTML = `<div class="waypointProfile">
-                            <div class="waypointImg" style="background-image: url('${img}')">
+                            <div row="${nblab}" onclick="updateWaypointImg(this,${nblab})" class="waypointImg" style="background-image: url('${img}')">
                         </div>
                         <div class="waypointData"> 
                         <input type="text" oninput="updateName(this,${nblab})" row="${nblab}" value="PlaceHolder" class="waypointTitle" />
@@ -26,7 +28,6 @@ function makeNewLabel() {
 </div>`
     waypoints[nblab] = {
         name: "PlaceHolder",
-        img: img,
         range: trange
     }
     nblab++
@@ -58,25 +59,85 @@ function updateRange(elem, row) {
 }
 
 
+function updateWaypointImg(elem, row) {
+    let input = document.getElementById("waypointFile")
+    trow = row
+    telem = elem
+    input.click()
+}
+
+function loadWaypointImage(file) {
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+
+        let tim = await addImageProcess(e.target.result)
+        waypoints[trow].image = tim
+        waypoints[trow].useImg = true
+
+        telem.style.backgroundImage = `url('${tim.src}')`
+
+        trow = undefined
+        telem = undefined
+
+    }
+    reader.readAsDataURL(file);
+}
+
+
 function drawWaypoints() {
-    if (stroke.length > 2) {
+    let traj = [...stroke]
+    if (mapFlag)
+        traj = [...mapStroke]
+    if (traj.length > 2) {
         let off = 115
-        let seg = makeSegments(stroke)
+        let seg = makeSegments(traj)
+
         let canvas = document.getElementById('main')
+        if (mapFlag)
+            canvas = mapCan
         let ctx = canvas.getContext('2d');
         ctx.font = "bold 24px helvetica";
         for (const [key, value] of Object.entries(waypoints)) {
-            let {width, height} = estimateLabelSize(ctx, value.name);
+            let width, height = 40
+            if (!value.useImg) {
+                let t = estimateLabelSize(ctx, value.name);
+                width = t[0]
+                height = t[1]
+            }
             width += 8
             height += 4
             const data = getLabelPlacement(seg, value.range, width, height, off)
-            drawTextLabel(ctx, data, value)
-
+            if (value.useImg) {
+                drawImageLabel(ctx, data, value)
+            } else {
+                drawTextLabel(ctx, data, value)
+            }
 
         }
     }
 }
 
+
+function drawImageLabel(ctx, data, waypoint) {
+    let w = 40
+    let h = 40
+
+    ctx.beginPath();
+    ctx.moveTo(data.link[0][0], data.link[0][1]);
+    ctx.lineTo(data.link[1][0], data.link[1][1]);
+    ctx.stroke();
+
+    ctx.save()
+
+    ctx.beginPath();
+    ctx.arc(data.label[0] , data.label[1] , w / 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.clip();
+    ctx.drawImage(waypoint.image, data.label[0]-w / 2, data.label[1]-h / 2, w, h);
+
+    ctx.restore()
+}
 
 function drawTextLabel(ctx, data, waypoint) {
 
@@ -86,7 +147,6 @@ function drawTextLabel(ctx, data, waypoint) {
     ctx.moveTo(link[0][0], link[0][1]);
     ctx.lineTo(link[1][0], link[1][1]);
     ctx.stroke();
-
     ctx.fillText(waypoint.name, label[0], label[1]);
 }
 
@@ -206,5 +266,5 @@ function estimateLabelSize(ctx, text) {
         (metrics.actualBoundingBoxAscent || 0) +
         (metrics.actualBoundingBoxDescent || 0);
 
-    return {width, height};
+    return [width, height];
 }

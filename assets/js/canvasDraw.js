@@ -8,6 +8,7 @@ let mode = "zoom"
 let mapFlag = false
 
 let mapStroke = []
+let map
 
 function iniCan() {
     let can = document.getElementById("main")
@@ -24,6 +25,9 @@ function initDraw() {
     // let container = document.getElementById("markCont")
 
     let can = document.getElementById("main")
+
+    if (mapFlag)
+        can = mapCan
     let rect = can.getBoundingClientRect();
 
     // container.style.height = rect.height + "px";
@@ -39,6 +43,8 @@ function initDraw() {
 
 function delDraw() {
     let can = document.getElementById("main")
+    if (mapFlag)
+        can = mapCan
 
     can.onpointerdown = null
     can.onpointermove = null
@@ -51,8 +57,12 @@ function onMouseDown(e) {
     strokePoint = [xy.x, xy.y];
     mouseDown = 1;
 
+    if (mapFlag) {
+        mapStroke = [[...strokePoint]]
+    } else {
+        stroke = [[...strokePoint]]
+    }
 
-    stroke = [[...strokePoint]]
     let can = document.getElementById("main")
     let cont = can.getContext('2d');
     cont.clearRect(0, 0, can.width, can.height);
@@ -65,15 +75,24 @@ function onMouseDown(e) {
 function onMouseMove(e) {
     if (mouseDown === 1) {
         let can = document.getElementById("main")
+        if (mapFlag)
+            can = mapCan
         let cont = can.getContext('2d');
         e.preventDefault()
         let xy = getMousePos(e);
-        draw(cont, stroke);
+        if (mapFlag) {
+            draw(cont, mapStroke);
+        } else {
+            draw(cont, stroke);
+        }
         strokePoint = [xy.x, xy.y];
         currStroke.push([...strokePoint])
 
 
         stroke = [...currStroke]
+        if (mapFlag)
+            mapStroke = [...currStroke]
+
 
     }
 }
@@ -81,14 +100,24 @@ function onMouseMove(e) {
 function onMouseUp(e) {
     mouseDown = 0
     let can = document.getElementById("main")
+    if (mapFlag)
+        can = mapCan
     let cont = can.getContext('2d');
     e.preventDefault()
     let xy = getMousePos(e);
 
     strokePoint = [xy.x, xy.y];
     currStroke.push([...strokePoint])
-    stroke = [...currStroke]
-    draw(cont, stroke);
+
+
+    if (mapFlag) {
+        mapStroke = [...currStroke]
+        draw(cont, mapStroke);
+    } else {
+        stroke = [...currStroke]
+        draw(cont, stroke);
+    }
+
     strokePoint = []
     /*    let tdat = {}
 
@@ -115,10 +144,17 @@ function onMouseUp(e) {
         // rectMatch(stroke, 40, "stretch")
 
         // let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
+        if (mapFlag) {
+            pixels2Coords()
+            makeMapping(mapStroke.map(d => {
+                return {x: d[0], y: d[1]}
+            }))
+        } else {
+            makeMapping(stroke.map(d => {
+                return {x: d[0], y: d[1]}
+            }))
+        }
 
-        makeMapping(stroke.map(d => {
-            return {x: d[0], y: d[1]}
-        }))
     }
 
     currStroke = []
@@ -179,11 +215,15 @@ function strokeToggle() {
         if (bgImg !== undefined) {
             drawBg()
         }
+        if (map)
+            map.dragging.disable();
         document.getElementById("strokeBtn").classList.add("selectedBrush")
 
 
     } else {
         mode = "zoom"
+        if (map)
+            map.dragging.enable();
         delDraw()
         document.getElementById("strokeBtn").classList.remove("selectedBrush")
     }
@@ -215,7 +255,12 @@ function iniMap() {
     container.style.width = canvas.width + "px";
     container.style.height = canvas.height + "px";
     // const map = L.map('map').setView([44.809025517564756, 5.495080290496283], 13);
-    const map = L.map('map').setView([dataRecords[0].latitude, dataRecords[0].longitude], 13);
+
+    let base = [44.809025517564756, 5.495080290496283]
+    if (dataRecords.length > 1) {
+        base = [dataRecords[0].latitude, dataRecords[0].longitude]
+    }
+    map = L.map('map',{ zoomControl: false }).setView(base, 13);
 
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenTopoMap contributors'
@@ -241,8 +286,11 @@ function iniMap() {
     resizeCanvas();
 
     function repositionCanvas() {
-        const topLeft = map.containerPointToLayerPoint([0, 0]);
-        L.DomUtil.setPosition(mapCan, topLeft);
+        if (mode === "zoom") {
+            const topLeft = map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(mapCan, topLeft);
+            drawWaypoints()
+        }
     }
 
     map.on("move", repositionCanvas);
@@ -253,22 +301,31 @@ function iniMap() {
 
     function drawTrack(coords) {
         ctx.clearRect(0, 0, mapCan.width, mapCan.height);
-        mapStroke = []
+
         ctx.beginPath();
+        if (coords.length > 0) {
+            mapStroke = []
+            coords.forEach((c, i) => {
 
-        coords.forEach((c, i) => {
+                const p = map.latLngToContainerPoint(c);
+                mapStroke.push([p.x, p.y]);
+                // const p = map.latLngToLayerPoint(c);
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
 
-            const p = map.latLngToContainerPoint(c);
-            mapStroke.push([p.x, p.y]);
-            // const p = map.latLngToLayerPoint(c);
-            if (i === 0) ctx.moveTo(p.x, p.y);
-            else ctx.lineTo(p.x, p.y);
-        });
+        } else {
+            mapStroke.forEach((c, i) => {
+                if (i === 0) ctx.moveTo(c[0], c[1]);
+                else ctx.lineTo(c[0], c[1]);
+            })
+        }
 
         ctx.strokeStyle = "red";
         ctx.lineWidth = 3;
         ctx.stroke();
         fakeMapDraw()
+        drawWaypoints()
     }
 
     map.on("move zoom", () => drawTrack(dataRecords.map(d => [d.latitude, d.longitude])));
@@ -287,9 +344,19 @@ function delMap() {
 }
 
 
-
 function fakeMapDraw() {
     makeMapping(mapStroke.map(d => {
         return {x: d[0], y: d[1]}
     }))
+}
+
+
+function pixels2Coords() {
+    let res = []
+    dataRecords = []
+    for (let i = 0; i < mapStroke.length; i++) {
+        let coords = map.containerPointToLatLng(mapStroke[i])
+        dataRecords.push({latitude: coords.lat, longitude: coords.lng})
+
+    }
 }

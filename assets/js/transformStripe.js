@@ -7,6 +7,8 @@ let intervals = []
 
 let brushFlip = false;
 
+let nInterRow = 0
+
 function stripeTransform(canvas, intervals, effect) {
 
     let [merged, anti] = processIntervals(intervals);
@@ -15,8 +17,6 @@ function stripeTransform(canvas, intervals, effect) {
     can.width = canvas.width;
     can.height = canvas.height;
 
-    console.log(merged);
-    console.log(anti);
     let ctx = can.getContext('2d');
 
     for (let i = 0; i < anti.length; i++) {
@@ -222,4 +222,83 @@ function toogleJagged(element) {
         element.classList.toggle("selectedBrush")
         delBrush()
     }
+}
+
+function testDrawInter() {
+
+    let svg = d3.select("#testCaret")
+    drawIntervalRow(svg, intervals)
+}
+
+
+function addIntervalSvg() {
+    let container = document.getElementById("intervalList")
+
+    let tdiv = document.createElement("div");
+    tdiv.setAttribute("row", nInterRow)
+    tdiv.setAttribute("class", "interRow")
+    let settingsDiv = document.createElement("div");
+    settingsDiv.setAttribute("class", "interSettings")
+
+    let svg = document.createElement("svg");
+    svg.setAttribute("class", "interSvg");
+    svg.setAttribute("xmls","http://www.w3.org/2000/svg")
+    svg.setAttribute("version","1.0")
+
+
+    tdiv.appendChild(settingsDiv);
+    tdiv.appendChild(svg);
+    container.appendChild(tdiv);
+
+    drawIntervalRow(d3.select(svg), intervals, nInterRow)
+    ++nInterRow
+}
+
+function drawIntervalRow(svg, intervals, row) {
+
+    let lines = svg.append("g").attr("class", "stripeCarets");
+
+    let rect = svg.node().getBoundingClientRect()
+
+
+    const margin = 2
+
+
+    let h = (rect.height * 0.8) - (margin * 2)
+
+    let w = rect.width - (margin * 2)
+
+    lines.append("line")
+        .attr("x1", margin)
+        .attr("y1", margin)
+        .attr("x2", margin)
+        .attr("y2", rect.height - margin)
+        .style("stroke-width", "10px")
+        .style("stroke", "#555")
+
+    lines.append("line")
+        .attr("x1", rect.width - margin)
+        .attr("y1", margin)
+        .attr("x2", rect.width - margin)
+        .attr("y2", rect.height - margin)
+
+
+    lines.append("line")
+        .attr("x1", margin)
+        .attr("y1", rect.height / 2)
+        .attr("x2", rect.width - margin)
+        .attr("y2", rect.height / 2)
+
+    let inters = svg.append("g").attr("class", "stripeRects");
+    for (const interval of intervals) {
+
+        let tx = interval[0]
+        let tw = interval[1]
+        inters.append("rect")
+            .attr("x", w * tx)
+            .attr("y", rect.height / 2 - h / 2)
+            .attr("width", (tw * w) - (w * tx))
+            .attr("height", h)
+    }
+
 }
