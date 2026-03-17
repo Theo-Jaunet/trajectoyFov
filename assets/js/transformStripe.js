@@ -210,6 +210,10 @@ function stripeBrushed(e) {
 
 
     intervals.push([select[0] / svgW, select[1] / svgW])
+
+
+    document.getElementById('intervalList').innerHTML = ''
+    addIntervalSvg()
 }
 
 function toogleJagged(element) {
@@ -240,17 +244,25 @@ function addIntervalSvg() {
     let settingsDiv = document.createElement("div");
     settingsDiv.setAttribute("class", "interSettings")
 
-    let svg = document.createElement("svg");
-    svg.setAttribute("class", "interSvg");
-    svg.setAttribute("xmls","http://www.w3.org/2000/svg")
-    svg.setAttribute("version","1.0")
+    settingsDiv.innerHTML = `
+        <div style="display: flex;float: right;margin-right:7px">
+            <img row="${nInterRow}" onclick="resetInterval()" class="intervalBtn" src="/assets/images/pictos/cross.png">
+            <img row="${nInterRow}" class="intervalBtn" src="/assets/images/pictos/edit.png">
+            <img row="${nInterRow}" onclick="toogleJagged(this)" class="intervalBtn" src="/assets/images/pictos/rect.png">
+        
+        </div>
+    `
+    // let svg = document.createElement("svg");
 
+    let svg = d3.create("svg")
+
+    svg.attr("class", "interSvg")
 
     tdiv.appendChild(settingsDiv);
-    tdiv.appendChild(svg);
+    tdiv.appendChild(svg.node());
     container.appendChild(tdiv);
 
-    drawIntervalRow(d3.select(svg), intervals, nInterRow)
+    drawIntervalRow(svg, intervals, nInterRow)
     ++nInterRow
 }
 
@@ -273,8 +285,6 @@ function drawIntervalRow(svg, intervals, row) {
         .attr("y1", margin)
         .attr("x2", margin)
         .attr("y2", rect.height - margin)
-        .style("stroke-width", "10px")
-        .style("stroke", "#555")
 
     lines.append("line")
         .attr("x1", rect.width - margin)

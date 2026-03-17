@@ -1,6 +1,14 @@
 let initSvg = true
 let loadingBar
-let totalFramesThreshold = 150
+let fullThreshold = 150
+let midThreshold = 300
+let lowThreshold = 600
+
+let maxFullFps = 24
+let maxMidFps = 12
+let maxLowFps = 6
+
+let bedFps = 3
 
 async function mediaFramesTest(file) {
     const input = new Mediabunny.Input({
@@ -19,7 +27,8 @@ async function mediaFramesTest(file) {
             initSvg = true
             const stats = await videoTrack.computePacketStats(100);
             const frameRate = Math.round(stats.averagePacketRate);
-
+            console.log(frameRate);
+            console.log(duration);
             const sink = new Mediabunny.VideoSampleSink(videoTrack);
 
             can.width = videoTrack.displayWidth
@@ -32,8 +41,8 @@ async function mediaFramesTest(file) {
             let fps = 0.2
             // let timestamps = [...Array(parseInt(duration)).keys()]
             let timestamps = []
-            if (duration > totalFramesThreshold) {
-                let nsec = 3
+            if (duration > lowThreshold) {
+                let nsec = bedFps
                 // fps = Math.floor(duration / totalFramesThreshold)
                 // timestamps = intervaler(timestamps.map((d, i) => i), fps)
                 let step = 1 / nsec
@@ -46,19 +55,57 @@ async function mediaFramesTest(file) {
                 }
 
 
-            } else {
-                let target = totalFramesThreshold
-                let estimatedFrames = frameRate * duration
-                fps = (target * frameRate) / estimatedFrames
+            }
+
+            else  if (duration < fullThreshold) {
+
+                let fps = Math.min(frameRate,maxFullFps)
+
                 let step = 1 / fps
                 // let step = 1 / 3
                 let cumul = 0
                 timestamps = []
-                for (let i = 0; i < target; i++) {
+                for (let i = 0; i < Math.floor(fps*duration); i++) {
                     timestamps.push(cumul)
                     cumul += step
                 }
             }
+            else  if (duration < midThreshold)  {
+
+                    let fps = Math.min(frameRate,maxMidFps)
+
+                    let step = 1 / fps
+                    // let step = 1 / 3
+                    let cumul = 0
+                    timestamps = []
+                    for (let i = 0; i < Math.floor(fps*duration); i++) {
+                        timestamps.push(cumul)
+                        cumul += step
+                    }
+                }
+
+            else   {
+
+                let fps = Math.min(frameRate,maxLowFps)
+
+                let step = 1 / fps
+                // let step = 1 / 3
+                let cumul = 0
+                timestamps = []
+                for (let i = 0; i < Math.floor(fps*duration); i++) {
+                    timestamps.push(cumul)
+                    cumul += step
+                }
+            }
+
+
+
+
+
+
+
+
+
 
             /*else if (duration < totalFramesThreshold) {
                 let tfps = Math.floor( totalFramesThreshold/duration)

@@ -481,4 +481,7 @@ function loadPreset() {
 function resetInterval() {
     intervals = []
     delBrush()
+
+    document.getElementById('intervalList').innerHTML = ''
+    addIntervalSvg()
 }

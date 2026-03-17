@@ -11,7 +11,10 @@ let bgImg
 
 let bgTransform = {x: 0, y: 0, scale: 1}
 
+let seaMap
 let mapCan
+
+let viewMod = 0
 /*let presetStripes= {
     0: {
         type: "rect",
@@ -69,6 +72,7 @@ async function setup() {
 
     await getVidFromUrl("assets/baseVid/trail.mp4")
     iniCan()
+    addIntervalSvg()
     const vid = document.getElementById("mainVideo")
     if (dev) {
         const tcan = document.getElementById("main")
@@ -114,7 +118,7 @@ async function setup() {
         stackCan.height = coords.height
 
         vidSize = {width: coords.width, height: coords.height};
-        testCube(10)
+        // testCube(10)
 
         // let tcan = document.getElementById("tcan")
         // tcan.style.width = coords.width + "px";
@@ -179,6 +183,13 @@ async function setup() {
 
     }
 
+
+    document.getElementById("seaFile").onchange = async e => {
+
+        seaTraj(e.target.files[0], e)
+    }
+
+
     document.getElementById("trajectoryFile").onchange = async e => {
 
         dataDispatcher(e.target.files[0], e)
@@ -205,6 +216,8 @@ async function setup() {
     document.getElementById("moreLabel").onclick = async e => {
         makeNewLabel()
     }
+
+
 }
 
 
@@ -227,9 +240,28 @@ function drawBg() {
     let tcon = tcan.getContext("2d")
 
     let t = Math.round((bgImg.naturalHeight * tcan.getBoundingClientRect().width) / bgImg.naturalWidth)
+
+    let ratio = bgImg.naturalWidth / bgImg.naturalHeight
+
+
+    let newH = tcan.getBoundingClientRect().width * ratio
+
     let viewDim = [tcan.getBoundingClientRect().width, t]
 
-    tcon.drawImage(bgImg, 0, 0, viewDim[0], viewDim[1])
+    let canSize = [tcan.getBoundingClientRect().width, tcan.getBoundingClientRect().height]
+
+    //THis is to crop
+    // tcon.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight,0, 0, viewDim[0], viewDim[1])
+
+    //THis is to stretch
+    // tcon.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, 0, 0, canSize[0], canSize[1])
+
+
+    let mw = (canSize[1] * bgImg.naturalWidth) / bgImg.naturalHeight
+
+    seaMap = [mw, canSize[1]]
+    //THis is to center and Fit based on Max Height
+    tcon.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, canSize[0] / 2 - mw / 2, 0, mw, canSize[1])
 }
 
 function testpreload() {
@@ -451,15 +483,96 @@ function testCube(n) {
     ctx.stroke()
     ctx.closePath()
 
+}
+
+function showSlitInCubes(n) {
+    let ratio = gframes[0].width / gframes[0].height
+    let maxW = 500
+    let maxH = maxW / ratio
+
+    let can = document.getElementById("testStack")
+    let ctx = can.getContext("2d");
+
+    let refW = Math.min(gframes[0].width, maxW / 2)
+    let refH = Math.min(gframes[0].height, maxH / 2)
+
+
+    can.width = maxW
+    can.height = maxH
+
+    let hstep = (maxW - refW) / gframes.length
+    let vstep = (maxH - refH) / gframes.length
+
+    ctx.globalAlpha = 0.9;
+
+    let slits = Object.keys(presetStripes)
+
+
+    for (let i = gframes.length - 1; i > 0; i--) {
+        if (i < n)
+            ctx.globalAlpha = 0;
+
+        for (let j = 0; j < slits.length - 1; j++) {
+            let slit = presetStripes[slits[j]]
+            let tx = slit.rect.x * gframes[i].width
+            let ty = slit.rect.y * gframes[i].height
+            let tw = slit.rect.width * gframes[i].width
+            let th = slit.rect.height * gframes[i].height
+
+            ctx.drawImage(gframes[i],
+                tx,
+                ty,
+                tw,
+                th,
+                i * hstep + (slit.rect.x * refW),
+                maxH - (vstep * i) - refH + (slit.rect.y * refH),
+                slit.rect.width * refW,
+                slit.rect.height * refH)
+
+
+        }
+
+
+    }
+
+
+    ctx.globalAlpha = 1;
+    ctx.beginPath()
+    ctx.moveTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep + refW, maxH - (vstep * gframes.length) - refH)
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length) - refH)
+    ctx.lineTo(hstep + refW, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.stroke()
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.moveTo(hstep + refW, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep + refW, maxH)
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length))
+    ctx.lineTo((gframes.length * hstep) + refW - hstep, maxH - (vstep * gframes.length) - refH)
+
+    ctx.stroke()
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.moveTo(hstep, maxH - (vstep * 0) - refH)
+    ctx.lineTo(hstep, maxH - vstep)
+    ctx.lineTo(hstep + refW, maxH - vstep)
+
+
+    ctx.stroke()
+    ctx.closePath()
 
 }
+
 
 function updateCube(e) {
     let elem = e.target || e.srcElement
 
     let ratio = elem.currentTime / elem.duration
 
-    testCube(Math.min(Math.floor(ratio * gframes.length), gframes.length - 1))
+    // testCube(Math.min(Math.floor(ratio * gframes.length), gframes.length - 1))
 }
 
 
@@ -473,6 +586,7 @@ async function testPyramidAnim() {
 }
 
 function fakeVideo() {
+    dispatchView(undefined,0)
     document.getElementById("videoInput").click()
 }
 
@@ -482,4 +596,74 @@ function fakeGpx() {
 
 function fakeBg() {
     document.getElementById("mainBg").click()
+}
+
+
+function fakeSea() {
+    document.getElementById("seaFile").click()
+}
+
+
+function seaTraj(file) {
+
+
+    console.log("dhasdsadas");
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+
+
+        let tt = d3.csvParse(e.target.result)
+        let mapCoords = tt.map(d => [+d.x_map, +d.y_map])
+        let can = document.getElementById("main")
+        let trect = can.getBoundingClientRect()
+        let viewDim = [trect.width, trect.height]
+
+        let xscale = d3.scaleLinear([0, 60], [0, seaMap[0]])
+        let yscale = d3.scaleLinear([0, 60], [seaMap[1], 0])
+
+        stroke = mapCoords.map(d => [viewDim[0] / 4 + xscale(d[0]), yscale(d[1])])
+
+        let cont = can.getContext("2d")
+        draw(cont, stroke)
+
+    }
+
+    reader.readAsText(file);
+}
+
+
+function dispatchView(elem, n) {
+
+    document.querySelector(".SelectedOption").classList.toggle("SelectedOption");
+    if (elem) {
+        elem.classList.toggle("SelectedOption");
+    } else {
+        document.querySelector(".displayOption").classList.toggle("SelectedOption");
+    }
+
+    if (n == viewMod) {
+
+    } else if (n == 0) {
+        document.getElementById("mainVideo").style.display = "inline-block";
+        document.getElementById("testStack").style.display = "none";
+
+
+    } else if (n == 1) {
+        document.getElementById("mainVideo").style.display = "none";
+        document.getElementById("testStack").style.display = "inline-block";
+        testCube(0)
+
+    } else if (n == 2) {
+        document.getElementById("mainVideo").style.display = "none";
+        document.getElementById("testStack").style.display = "inline-block";
+        showSlitInCubes(0)
+    } else if (n == 3) {
+        document.getElementById("mainVideo").style.display = "none";
+        document.getElementById("testStack").style.display = "inline-block";
+        testSack(0)
+
+
+    }
+    viewMod = n
 }

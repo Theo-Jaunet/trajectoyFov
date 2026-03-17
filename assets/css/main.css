@@ -3,6 +3,7 @@
     border: #555555 1px solid;
     max-width: 55vh;
     border-radius: 5px;
+    max-height: 500px;
 }
 
 .stripeRow {
@@ -257,6 +258,33 @@ color: #eee;
 }
 
 .interSvg {
-    width : 71%;
+    width : 71.6%;
     height:22px;
+}
+
+.intervalBtn {
+    width: 18px;
+    height: 18px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+}
+
+.displayOption {
+    width: 65px;
+    text-align: center;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+    z-index: 999;
+
+}
+
+.SelectedOption {
+    border: red 1px solid;
 }
