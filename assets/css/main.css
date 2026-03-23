@@ -288,3 +288,15 @@ color: #eee;
 .SelectedOption {
     border: red 1px solid;
 }
+
+.addRow {
+    width: 17px;
+    height: 17px;
+    border: #555555 1px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+    z-index: 999;
+    margin-left: 25%;
+}

@@ -27,12 +27,14 @@ async function mediaFramesTest(file) {
             initSvg = true
             const stats = await videoTrack.computePacketStats(100);
             const frameRate = Math.round(stats.averagePacketRate);
-            console.log(frameRate);
-            console.log(duration);
             const sink = new Mediabunny.VideoSampleSink(videoTrack);
 
-            can.width = videoTrack.displayWidth
-            can.height = videoTrack.displayHeight;
+            //USE THIS for Higher res at perf cost
+            // can.width = videoTrack.displayWidth
+            // can.height = videoTrack.displayHeight;
+
+            can.width = vidSize.width
+            can.height = vidSize.height
 
             let count = 0
 
@@ -55,56 +57,43 @@ async function mediaFramesTest(file) {
                 }
 
 
-            }
+            } else if (duration < fullThreshold) {
 
-            else  if (duration < fullThreshold) {
-
-                let fps = Math.min(frameRate,maxFullFps)
+                let fps = Math.min(frameRate, maxFullFps)
 
                 let step = 1 / fps
                 // let step = 1 / 3
                 let cumul = 0
                 timestamps = []
-                for (let i = 0; i < Math.floor(fps*duration); i++) {
+                for (let i = 0; i < Math.floor(fps * duration); i++) {
                     timestamps.push(cumul)
                     cumul += step
                 }
-            }
-            else  if (duration < midThreshold)  {
+            } else if (duration < midThreshold) {
 
-                    let fps = Math.min(frameRate,maxMidFps)
-
-                    let step = 1 / fps
-                    // let step = 1 / 3
-                    let cumul = 0
-                    timestamps = []
-                    for (let i = 0; i < Math.floor(fps*duration); i++) {
-                        timestamps.push(cumul)
-                        cumul += step
-                    }
-                }
-
-            else   {
-
-                let fps = Math.min(frameRate,maxLowFps)
+                let fps = Math.min(frameRate, maxMidFps)
 
                 let step = 1 / fps
                 // let step = 1 / 3
                 let cumul = 0
                 timestamps = []
-                for (let i = 0; i < Math.floor(fps*duration); i++) {
+                for (let i = 0; i < Math.floor(fps * duration); i++) {
+                    timestamps.push(cumul)
+                    cumul += step
+                }
+            } else {
+
+                let fps = Math.min(frameRate, maxLowFps)
+
+                let step = 1 / fps
+                // let step = 1 / 3
+                let cumul = 0
+                timestamps = []
+                for (let i = 0; i < Math.floor(fps * duration); i++) {
                     timestamps.push(cumul)
                     cumul += step
                 }
             }
-
-
-
-
-
-
-
-
 
 
             /*else if (duration < totalFramesThreshold) {
@@ -122,7 +111,8 @@ async function mediaFramesTest(file) {
             // let allFrames = intervaler(timestamps.map((d, i) => i), fps)
 
             for await (const sample of sink.samplesAtTimestamps(timestamps)) {
-                sample.draw(ctx, 0, 0);
+                // sample.draw(ctx, 0, 0); --- > use this for perf loss but HD Stripes and cubes
+                sample.draw(ctx, 0, 0,  videoTrack.displayWidth, videoTrack.displayHeight, 0, 0, vidSize.width, vidSize.height);
 
                 frames.push(cloneCanvas(can));
 
@@ -193,4 +183,20 @@ function clearLoading() {
     document.getElementById("mainVideo").controls = true
     initSvg = true
     svg.style("display", "none")
+}
+
+
+async function tempGeoJson() {
+
+    let json = await d3.json("sytral_tcl_sytral.tcllignemf_2_0_0.json" , (d) => {
+        return d.features}
+    )
+
+    console.log(json.features[5].geometry.coordinates[0]);
+
+    dataRecords = json.features[5].geometry.coordinates[0].map(d=> {
+
+        return {latitude:d[1],longitude:d[0]}
+    })
+
 }

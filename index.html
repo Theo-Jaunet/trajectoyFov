@@ -168,14 +168,19 @@
     <div style="">
         <div style="position: absolute;margin-top: -15px">
             <button onclick="loadPreset()"> Reset preset</button>
+<!--            <button onclick="addIntervalSvg()"> Add row</button>-->
+<!--            <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">-->
         </div>
         <div style="width: 100%" id="intervalList">
 
         </div>
+        <div style="width: 100%;text-align: center">
+        <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">
+        </div>
         <svg id="stripeBrush"></svg>
         <div id="stripeList">
         </div>
-        <div style="text-align: center; margin-top: 1%;display: flex; justify-content: center;align-content: center;float: right;width: 67.5%;
+        <div style="text-align: center; margin-top: 1%;display: flex; justify-content: center;align-content: center;float: right;width: 75.2%;
 ">
             <img id="moreStripe" style="width: 25px;cursor: pointer" src="assets/images/pictos/plus.png">
         </div>
@@ -185,6 +190,65 @@
 
 </div>
 
+
+<dialog id="transformSettings" class="modal" style="width: 500px">
+    <img style="position: absolute;right: 5px;top: 5px" onclick="closeModal()" class="intervalBtn"
+         src="/assets/images/pictos/cross.png">
+    <h4 id="editTitle"> Transform Settings</h4>
+
+    <div>
+
+        <label for="transformType"> Transform Type</label>
+
+        <select id="transformType">
+
+        </select>
+    </div>
+
+    <div id="transformOptions">
+
+    </div>
+
+    <div id="DataOptions">
+        <h6> DATA</h6>
+        <label for="dataType"> Usage</label>
+        <select oninput="updateFromDataType()" id="dataType">
+            <option value="interval">Interval</option>
+            <option value="linear">Linear</option>
+        </select>
+        <label for="dataRow"> Data Row</label>
+        <select id="dataRow">
+        </select>
+
+        <div id="dataSettings">
+            <div id="dataExtent"></div>
+            <div id="dataOperator"></div>
+        </div>
+        <button onclick="applyData()"> Apply Data</button>
+    </div>
+</dialog>
+
+
+<!--
+<dialog id="dataSlice" class="modal" style="width: 500px">
+    <img style="position: absolute;right: 5px;top: 5px" onclick="closeModal()" class="intervalBtn"
+         src="/assets/images/pictos/cross.png">
+    <h4 id="editTitle"> Transform Settings</h4>
+
+    <div>
+
+        <label for="transformType"> Transform Type</label>
+
+        <select id="transformType">
+
+        </select>
+    </div>
+
+    <div id="transformOptions">
+
+    </div>
+</dialog>
+-->
 
 </body>
 </html>

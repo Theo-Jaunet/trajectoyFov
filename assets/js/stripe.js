@@ -3,7 +3,7 @@ let selectedStripe = null
 
 let stripes = {}
 let slitEdit = false
-const defaultSampleSize = [10, 120]
+const defaultSampleSize = [1, 100]
 
 
 function makeClientStripe(n = undefined) {
@@ -65,12 +65,9 @@ function makeClientStripe(n = undefined) {
     tcan.onclick = async e => {
 
         let rect = tcan.getBoundingClientRect()
-        console.log(rect.width, "canSize");
-        console.log(e.offsetX, "offsetX");
         const ratio = e.offsetX / rect.width
-        console.log(ratio, "ratio");
         updateVid(ratio)
-        testCube(Math.floor(ratio*gframes.length))
+        testCube(Math.floor(ratio * gframes.length))
     }
 }
 
@@ -433,18 +430,32 @@ function mergeSlits() {
             tcon.drawImage(can, -60, currH, mW - 60, tth)
             tcon.resetTransform()
         } else if (stripes[key].flip) {
-            tcon.drawImage(can, 30, currH, mW + 60, tth)
+            tcon.drawImage(can, 0, currH, mW + 60, tth)
         } else {
-            tcon.drawImage(can, 30, currH, mW + 60, tth)
+            tcon.drawImage(can, 0, currH, mW + 60, tth)
         }
 
         currH += tth
     }
 
 
-    if (intervals.length > 0) {
-        ref = stripeTransform(ref, intervals)
+    // if (intervals.length > 0) {
+    //     ref = stripeTransform(ref, intervals)
+    // }
+
+
+    for (const [key, value] of Object.entries(megaIntervals)) {
+        if (value.type.toLowerCase() == "interval") {
+            if (value.data.length > 0) {
+                ref = stripeTransform(ref, value)
+            }
+        } else if (value.type.toLowerCase() == "linear") {
+            if (value.data.length > 0) {
+                ref = slicedLinear(ref, value)
+            }
+        }
     }
+
 
     // document.getElementById("debugger").appendChild(ref)
 
@@ -478,10 +489,219 @@ function loadPreset() {
     // mak
 }
 
-function resetInterval() {
-    intervals = []
-    delBrush()
+function resetInterval(row) {
 
+    delBrush()
+    delete megaIntervals[row]
+    // delete
     document.getElementById('intervalList').innerHTML = ''
-    addIntervalSvg()
+    drawAllIntervals()
+}
+
+
+function loadTransformModal(row) {
+
+    let select = document.getElementById('transformType');
+    currInterRow = row
+    const dialog = document.getElementById("transformSettings");
+    dialog.showModal();
+    fillModalOptions(megaIntervals[currInterRow].transform.type)
+    fillTypeSelect(megaIntervals[currInterRow].transform.type)
+}
+
+
+function fillTypeSelect(type = undefined) {
+    let cont = document.getElementById('transformType');
+    cont.innerHTML = ""
+    for (const [key, value] of Object.entries(transforms)) {
+        cont.innerHTML += `<option value="${key}" ${(key === type ? "selected" : "")}>${key}</option>`
+    }
+
+
+    cont.oninput = function () {
+        megaIntervals[currInterRow].transform.type = cont.value
+        fillModalOptions(cont.options[cont.selectedIndex].text)
+
+    }
+
+    // fillDataInfo(megaIntervals[currInterRow].transform.type,megaIntervals[currInterRow].type)
+
+
+}
+
+function fillModalOptions(type) {
+
+    let container = document.getElementById('transformOptions');
+    container.innerHTML = '';
+    megaIntervals[currInterRow].transform.values = {}
+    for (const option of transforms[type].options) {
+
+        let tinpunt = document.createElement("input");
+        let label = document.createElement("label");
+
+        container.appendChild(label);
+        container.appendChild(tinpunt);
+        label.innerHTML = option.name;
+        tinpunt.type = option.type;
+        tinpunt.value = option.value;
+
+        megaIntervals[currInterRow].transform.values[option.name] = option.value
+
+        if (option.type == "range") {
+            tinpunt.setAttribute("min", 0)
+            tinpunt.setAttribute("max", 1)
+            tinpunt.setAttribute("step", 0.1)
+
+        }
+
+        tinpunt.oninput = function () {
+
+            megaIntervals[currInterRow].transform.values[option.name] = tinpunt.value;
+        }
+
+
+
+    }
+    let dataRows = document.getElementById("dataRow");
+    dataRows.innerHTML = ""
+    for (const [key, value] of Object.entries(derivedData)) {
+        dataRows.innerHTML += `<option value="${key}" >${key}</option>`
+    }
+
+    dataRows.oninput = function () {
+        fillDataInfo(dataRows.value, megaIntervals[currInterRow].type)
+    }
+
+    let defaultData = Object.keys(derivedData)
+    if (defaultData.length > 0) {
+        fillDataInfo(defaultData[0], megaIntervals[currInterRow].type)
+    }
+}
+
+function fillDataInfo(key, type) {
+    let infos = document.getElementById("dataExtent");
+    let range = [0, 0]
+
+    if (derivedData[key].length > 0) {
+        range = d3.extent(derivedData[key]);
+    }
+    infos.innerHTML = `<p><span style="font-weight: 600">min:</span> ${range[0]}, <span style="font-weight: 600">max:</span> ${range[1]}</p>`;
+
+    let operators = document.getElementById("dataOperator");
+    operators.innerHTML = ""
+    if (type.toLowerCase() == "interval") {
+        operators.innerHTML = `<select id="interSign">
+                <option value="0"> >  </option>
+                <option value="1"> < </option>
+                </select>
+                   <input id="interVal" type="number" value="0" min="${range[0]}" max="${range[1]}"> `;
+    } else if (type.toLowerCase() == "linear") {
+        operators.innerHTML = `
+<p><span style="font-weight: 600">min Val:</span></p>
+          <input id="LinearMinVal" type="range" step="0.1" value="0" min="0" max="1"> 
+          <p><span style="font-weight: 600">Max Val:</span></p>
+            <input id="LinearMaxVal" type="range" step="0.1" value="1" min="0" max="1"> 
+        `
+        //TODO: Linear
+    } else if (type == "none") {
+
+
+    }
+
+}
+
+
+function applyData() {
+
+    let type = document.getElementById("dataType");
+
+    megaIntervals[currInterRow].type = type.options[type.selectedIndex].text
+
+    let dRow = document.getElementById("dataRow")
+    let dataRow = dRow.options[dRow.selectedIndex].text
+
+    if (megaIntervals[currInterRow].type === "Interval") {
+        let op = document.getElementById("interSign").value;
+        let tval = document.getElementById("interVal").value;
+
+        let inters = makeInters(derivedData[dataRow], op, tval)
+        console.log(inters);
+        megaIntervals[currInterRow].data = inters;
+        drawAllIntervals()
+    } else if (megaIntervals[currInterRow].type === "Linear") {
+        let min = document.getElementById("LinearMinVal").value
+        let max = document.getElementById("LinearMaxVal").value
+        let extent = d3.extent(derivedData[dataRow])
+        let range = d3.scaleLinear(extent, [min, max]).clamp(true);
+        megaIntervals[currInterRow].data = derivedData[dataRow].map(d => +range(d))
+
+    }
+
+    makeMapping(stroke.map(d => {
+        return {x: d[0], y: d[1]}
+    }))
+
+}
+
+
+function makeInters(data, type, threshold) {
+
+    let res = []
+    let temp = []
+    let flag = false
+    for (let i = 0; i < data.length; i++) {
+        if (type == 0) {
+            if (data[i] > threshold) {
+                if (flag === false) {
+                    flag = true
+                    temp.push(i / data.length)
+                }
+            } else {
+                if (flag) {
+                    temp.push(i / data.length)
+                    flag = false
+                    res.push(temp)
+                    temp = []
+                }
+            }
+        }
+        if (type == 1) {
+            if (data[i] < threshold) {
+                if (flag === false) {
+                    flag = true
+                    temp.push(i / data.length)
+                }
+            } else {
+                if (flag) {
+                    temp.push(i / data.length)
+                    flag = false
+                    res.push(temp)
+                    temp = []
+                }
+            }
+        }
+
+    }
+
+    if (flag) {
+        temp.push(1)
+        res.push(temp)
+    }
+
+    return res
+}
+
+
+function updateFromDataType() {
+
+    let val = document.getElementById("dataType").value;
+    let dataRows = document.getElementById("dataRow").value;
+    fillDataInfo(dataRows, val)
+
+}
+
+
+function closeModal() {
+    const dialog = document.getElementById("transformSettings");
+    dialog.close();
 }

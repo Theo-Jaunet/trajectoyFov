@@ -14,6 +14,9 @@ let bgTransform = {x: 0, y: 0, scale: 1}
 let seaMap
 let mapCan
 
+let derivedData = {
+}
+
 let viewMod = 0
 /*let presetStripes= {
     0: {
@@ -98,7 +101,7 @@ async function setup() {
     vid.addEventListener("timeupdate", updateCube)
 
 
-    document.getElementById("mainVideo").addEventListener("loadedmetadata", function (e) {
+    document.getElementById("mainVideo").addEventListener("loadedmetadata", async function (e) {
 
         let svg = document.getElementById("videoOverlay")
 
@@ -118,51 +121,40 @@ async function setup() {
         stackCan.height = coords.height
 
         vidSize = {width: coords.width, height: coords.height};
+
+
+        // await getVidFromUrl(vidUrl)
         // testCube(10)
 
-        // let tcan = document.getElementById("tcan")
-        // tcan.style.width = coords.width + "px";
-        // tcan.style.height = coords.width + "px";
     }, false);
 
     document.getElementById("videoInput").onchange = async e => {
 
 
         vidUrl = URL.createObjectURL(e.target.files[0])
-        console.log(vidUrl);
+
+        // await getVidFromUrl(vidUrl)
+
         document.getElementById("mainSource").src = vidUrl
         let svg = document.getElementById("videoOverlay")
         svg.style.display = "inline-block"
-        vid.load()
+        //Weird stuff to be on the safe side might opti later
+        await vid.load()
+        await vid.play()
+        await vid.pause()
+
+        let coords = vid.getBoundingClientRect()
+        vidSize = {width: coords.width, height: coords.height};
+        vid.controls = false
 
 
         console.time("encoding")
         let frames = await mediaFramesTest(e.target.files[0])
 
         console.timeEnd("encoding")
-        /*      const vid = document.createElement("video");
-              vid.src = vidUrl;
-              const r = await extractFramesFromVideo(vid).then(r => r)
-              // gframes = r
-              singleSlit(gframes)*/
+        //
         gframes = frames
-        testCube(10)
         svg.style.display = "none"
-
-
-        //Pyramid stuff
-        /*        let tcan = document.getElementById("tcan")
-                let ctx = tcan.getContext("2d")
-
-                let step = tcan.width/frames.length
-                for (let i = 0; i < frames.length; i++) {
-                    ctx.drawImage(frames[i], i*step, i*step,  tcan.width-(i*step)*2, tcan.height-(i*step)*2)
-
-                }*/
-
-        // singleSlit(gframes)
-
-        // slitEvents(container)
 
     }
 
@@ -339,11 +331,6 @@ async function getVidFromUrl(url) {
 
         vidUrl = URL.createObjectURL(t)
 
-
-        let frames = await mediaFramesTest(t)
-        gframes = frames;
-
-
         const vid = document.getElementById("mainVideo")
         document.getElementById("mainSource").src = vidUrl
         await vid.load()
@@ -355,7 +342,13 @@ async function getVidFromUrl(url) {
 
         svg.style.width = coords.width + "px";
         svg.style.height = coords.height + "px";
+
+        svg.style.display = "inline-block"
         vidSize = {width: coords.width, height: coords.height};
+
+        let frames = await mediaFramesTest(t)
+        gframes = frames;
+
 
     } catch (error) {
         console.error(error.message);
@@ -586,12 +579,13 @@ async function testPyramidAnim() {
 }
 
 function fakeVideo() {
-    dispatchView(undefined,0)
+    dispatchView(undefined, 0)
     document.getElementById("videoInput").click()
 }
 
 function fakeGpx() {
     document.getElementById("trajectoryFile").click()
+
 }
 
 function fakeBg() {
@@ -606,12 +600,9 @@ function fakeSea() {
 
 function seaTraj(file) {
 
-
-    console.log("dhasdsadas");
     const reader = new FileReader();
 
     reader.onload = async function (e) {
-
 
         let tt = d3.csvParse(e.target.result)
         let mapCoords = tt.map(d => [+d.x_map, +d.y_map])
@@ -622,7 +613,8 @@ function seaTraj(file) {
         let xscale = d3.scaleLinear([0, 60], [0, seaMap[0]])
         let yscale = d3.scaleLinear([0, 60], [seaMap[1], 0])
 
-        stroke = mapCoords.map(d => [viewDim[0] / 4 + xscale(d[0]), yscale(d[1])])
+        console.log(viewDim[0]);
+        stroke = mapCoords.map(d => [(viewDim[0] - seaMap[0]) / 2 + xscale(d[0]), yscale(d[1])])
 
         let cont = can.getContext("2d")
         draw(cont, stroke)
@@ -666,4 +658,10 @@ function dispatchView(elem, n) {
 
     }
     viewMod = n
+}
+
+function nani() {
+    let container = document.getElementById("debugger");
+
+    container.appendChild(gframes[0]);
 }

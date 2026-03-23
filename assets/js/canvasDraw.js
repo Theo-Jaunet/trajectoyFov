@@ -137,7 +137,7 @@ function onMouseUp(e) {
     } else {
         // makeUpStuff(strokes[strokes.length - 1])
 
-
+        makeData(stroke)
         // updateMainCanvas()
         // fillStrokes()
 
@@ -146,10 +146,13 @@ function onMouseUp(e) {
         // let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
         if (mapFlag) {
             pixels2Coords()
+            makeData(mapStroke)
             makeMapping(mapStroke.map(d => {
                 return {x: d[0], y: d[1]}
+
             }))
         } else {
+            makeData(stroke)
             makeMapping(stroke.map(d => {
                 return {x: d[0], y: d[1]}
             }))
@@ -260,7 +263,7 @@ function iniMap() {
     if (dataRecords.length > 1) {
         base = [dataRecords[0].latitude, dataRecords[0].longitude]
     }
-    map = L.map('map',{ zoomControl: false }).setView(base, 13);
+    map = L.map('map', {zoomControl: false}).setView(base, 13);
 
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenTopoMap contributors'

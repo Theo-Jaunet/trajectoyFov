@@ -99,8 +99,8 @@ function slitRect(frames, rect, n) {
     // ctx.imageSmoothingEnabled= false
     // ctx.filter = "blur(3px)";
     let x = Math.floor(frames[0].width * rect.x)
-    let w = Math.floor(frames[0].width * rect.width)
-    let h = Math.floor(frames[0].height * rect.height)
+    let w = Math.max(2, Math.floor(frames[0].width * rect.width))
+    let h = Math.max(2, Math.floor(frames[0].height * rect.height))
     let y = Math.floor(frames[0].height * rect.y)
 
     let srcPts = [
