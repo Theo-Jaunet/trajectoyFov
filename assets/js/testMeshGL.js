@@ -18,8 +18,12 @@ function makeMapping(path, heightEncoding = undefined) {
     if (!gl) throw "WebGL not supported";
 
 
-    const samples = buildSamples(path, SAMPLE_STEP);
+    const raw = buildSamples(path, SAMPLE_STEP);
+    // const samples = buildSamples(path, SAMPLE_STEP);
+    const samples = resampleUniform(raw, SAMPLE_STEP);
     const mesh = buildMesh(samples, stripe.height * meshHeight, heightEncoding);
+
+
 
     const program = gl.createProgram();
     gl.attachShader(program, shader(gl.VERTEX_SHADER, `
@@ -97,6 +101,84 @@ function shader(type, src) {
     return s;
 }
 
+
+function catmullRom(p0, p1, p2, p3, t) {
+    const t2 = t * t;
+    const t3 = t2 * t;
+
+    return {
+        x: 0.5 * (
+            2 * p1.x +
+            (-p0.x + p2.x) * t +
+            (2*p0.x - 5*p1.x + 4*p2.x - p3.x) * t2 +
+            (-p0.x + 3*p1.x - 3*p2.x + p3.x) * t3
+        ),
+        y: 0.5 * (
+            2 * p1.y +
+            (-p0.y + p2.y) * t +
+            (2*p0.y - 5*p1.y + 4*p2.y - p3.y) * t2 +
+            (-p0.y + 3*p1.y - 3*p2.y + p3.y) * t3
+        )
+    };
+}
+
+function buildSamples(path, step) {
+    const samples = [];
+
+    const SEGMENTS = 20; // 🔥 increase for smoother curves
+
+    for (let i = 0; i < path.length - 1; i++) {
+        const p0 = path[i - 1] || path[i];
+        const p1 = path[i];
+        const p2 = path[i + 1];
+        const p3 = path[i + 2] || p2;
+
+        for (let j = 0; j < SEGMENTS; j++) {
+            const t = j / SEGMENTS;
+
+            const p = catmullRom(p0, p1, p2, p3, t);
+            const pNext = catmullRom(p0, p1, p2, p3, t + 0.01);
+
+            samples.push({
+                x: p.x,
+                y: p.y,
+                angle: Math.atan2(pNext.y - p.y, pNext.x - p.x)
+            });
+        }
+    }
+
+    return samples;
+}
+
+function resampleUniform(samples, step) {
+    const out = [];
+    let acc = 0;
+
+    for (let i = 1; i < samples.length; i++) {
+        const a = samples[i - 1];
+        const b = samples[i];
+
+        const d = Math.hypot(b.x - a.x, b.y - a.y);
+
+        if (acc + d >= step) {
+            const t = (step - acc) / d;
+
+            out.push({
+                x: a.x + (b.x - a.x) * t,
+                y: a.y + (b.y - a.y) * t,
+                angle: Math.atan2(b.y - a.y, b.x - a.x)
+            });
+
+            acc = 0;
+        } else {
+            acc += d;
+        }
+    }
+
+    return out;
+}
+
+/*
 function buildSamples(path, step) {
     const s = [];
     for (let i = 0; i < path.length - 1; i++) {
@@ -118,6 +200,7 @@ function buildSamples(path, step) {
     }
     return s;
 }
+*/
 
 function buildMesh(samples, h, hEncode) {
     const pos = [];

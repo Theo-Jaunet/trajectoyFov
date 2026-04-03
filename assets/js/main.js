@@ -14,8 +14,7 @@ let bgTransform = {x: 0, y: 0, scale: 1}
 let seaMap
 let mapCan
 
-let derivedData = {
-}
+let derivedData = {}
 
 let viewMod = 0
 /*let presetStripes= {
@@ -491,40 +490,99 @@ function showSlitInCubes(n) {
 
 
     can.width = maxW
-    can.height = maxH
+    can.height = maxH + 1
 
     let hstep = (maxW - refW) / gframes.length
     let vstep = (maxH - refH) / gframes.length
 
     ctx.globalAlpha = 0.9;
 
-    let slits = Object.keys(presetStripes)
+    // let slits = Object.keys(presetStripes)
 
 
+      let coords = [
+           [ [0.01,0.3],[0.3,0.05] ],
+
+            [ [0.5,0.9],[0.3,0.05] ],
+        ]
+
+    // let coords =
+    //     [
+    //         [[0.6, 0.35], [0.3, 0.4]],
+    //         [[0.3, 0.2], [0.3, 0.4]],
+    //         [[0.03, 0.04], [0.3, 0.4]],
+    //     ]
+
+    let id = 2
+    let it = 0
     for (let i = gframes.length - 1; i > 0; i--) {
+
         if (i < n)
             ctx.globalAlpha = 0;
 
-        for (let j = 0; j < slits.length - 1; j++) {
-            let slit = presetStripes[slits[j]]
-            let tx = slit.rect.x * gframes[i].width
-            let ty = slit.rect.y * gframes[i].height
-            let tw = slit.rect.width * gframes[i].width
-            let th = slit.rect.height * gframes[i].height
+        for (let j = 0; j < coords.length ; j++) {
+            // let slit = presetStripes[slits[j]]
+            /*
+                        let tx = slit.rect.x * gframes[i].width
+                        let ty = slit.rect.y * gframes[i].height
+                        let tw = slit.rect.width * gframes[i].width
+                        let th = slit.rect.height * gframes[i].height
+            */
+            // if (i > gframes.length * 0.65) {
+            //
+            //     id = 2
+            // } else if (i > gframes.length * 0.4) {
+            //     id = 1
+            // }
+            // else if (i > gframes.length * 0.2) {
+            //     id = 0
+            // }
+            // console.log(id);
+            // console.log(coords[id]);
+
+            let tx = 0.05 * gframes[i].width
+            let ty = 0.8
+            let tw = 0.3 * gframes[i].width
+            let th = 0.95 * gframes[i].height
+
+
+            if (j ==1 ) {
+                 tx = 0.5 * gframes[i].width
+                 ty = 0.8 * gframes[i].height
+                 tw = 0.3 * gframes[i].width
+                 th = 0.95 * gframes[i].height
+            }
+            if (j == 2) {
+                ctx.globalAlpha = 1
+            } else {
+                ctx.globalAlpha = 1
+            }
+
+
+            // ctx.drawImage(gframes[i],
+            //     tx,
+            //     ty,
+            //     tw,
+            //     th,
+            //     i * hstep + (slit.rect.x * refW),
+            //     maxH - (vstep * i) - refH + (slit.rect.y * refH),
+            //     slit.rect.width * refW,
+            //     slit.rect.height * refH)
+
 
             ctx.drawImage(gframes[i],
                 tx,
                 ty,
                 tw,
                 th,
-                i * hstep + (slit.rect.x * refW),
-                maxH - (vstep * i) - refH + (slit.rect.y * refH),
-                slit.rect.width * refW,
-                slit.rect.height * refH)
+                i * hstep + (coords[j][0][0] * refW),
+                maxH - (vstep * i) - refH + (coords[j][0][1] * refH),
+                coords[j][1][0] * refW,
+                coords[j][1][1] * refH)
 
 
         }
-
+        it++
 
     }
 

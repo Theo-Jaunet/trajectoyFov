@@ -7,14 +7,13 @@ async function getThem(n) {
     tcon.font = " 24px serif";
 
 
-
     for (let i = 1; i < n; i++) {
         let name = `thumb${String(i).padStart(4, '0')}.png`
         // frames.push(fetchImage(`assets/tempSamples/${name}`))
         tcon.fillStyle = "white"
-        tcon.fillRect(420,220,200,400)
+        tcon.fillRect(420, 220, 200, 400)
         tcon.fillStyle = "black"
-        tcon.fillText(`${i} / ${n}`, 420,300)
+        tcon.fillText(`${i} / ${n}`, 420, 300)
         // frames.push(loadImg(`assets/tempSamples/${name}`))
         const im = await addImageProcess(`assets/tempSamples/${name}`)
 
@@ -61,4 +60,20 @@ function addImageProcess(src) {
         img.onerror = reject
         img.src = src
     })
+}
+
+
+function fakeSlope() {
+
+    let res = [0]
+
+
+    for (let i = 1; i < dataRecords.length; i++) {
+
+
+        res.push(dataRecords[i].elevation - dataRecords[i - 1].elevation)
+    }
+
+    derivedData["slope"] = res
+
 }

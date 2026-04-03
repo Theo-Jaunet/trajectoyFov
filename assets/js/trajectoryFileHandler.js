@@ -26,6 +26,7 @@ function universalPloter(coords,map=[]) {
 
 function gpxtogeojson(gpx) {
    let fileXML = new DOMParser().parseFromString(gpx, "text/xml")
+    console.log(fileXML);
     let geojson = toGeoJSON.gpx(fileXML);
 
     return geojson;
@@ -34,6 +35,7 @@ function gpxtogeojson(gpx) {
 function gpx2records(gpxText) {
     //THIS FUNCTION IS BIASED -> WE EXPECT THAT THE LINESTRING IS ALWAYS FIRST
     let tdat = gpxtogeojson(gpxText);
+    console.log(tdat);
     let times = tdat.features[0].properties.coordTimes;
     let points = tdat.features[0].geometry.coordinates;
 

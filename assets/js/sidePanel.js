@@ -5,38 +5,72 @@ let waypoints = {}
 let trow
 let telem
 
-function makeNewLabel() {
+
+function addWaypoint(waypoint) {
+
+
+}
+
+
+function makeNewLabel(id = undefined, wp = undefined) {
     let waypoint = document.createElement("div")
     let container = document.getElementById("waypoints")
+
+    let tid = (id === undefined ? nblab : id)
 
     waypoint.classList.add("waypoint")
     waypoint.setAttribute("id", "waypoint" + nblab)
 
     let img = "assets/images/pictos/plus.png"
+    let name = "Type a name.."
+
+    if (wp) {
+        img = wp.image
+        name = wp.name
+    }
 
     let trange = Math.random()
 
     waypoint.innerHTML = `<div class="waypointProfile">
-                            <div row="${nblab}" onclick="updateWaypointImg(this,${nblab})" class="waypointImg" style="background-image: url('${img}')">
+                            <div row="${tid}" onclick="updateWaypointImg(this,${tid})" class="waypointImg" style="background-image: url('${img}')">
                         </div>
                         <div class="waypointData"> 
-                        <input type="text" oninput="updateName(this,${nblab})" row="${nblab}" value="PlaceHolder" class="waypointTitle" />
-                         <input type="range" min="0" max="1" step="0.01" oninput="updateRange(this,${nblab})" row="${nblab}" value="${trange}" class="waypointRange" />
+                        <input type="text" oninput="updateName(this,${tid})" row="${tid}" value="${name}" class="waypointTitle" />
+                         <input type="range" min="0" max="1" step="0.01" oninput="updateRange(this,${tid})" row="${tid}" value="${trange}" class="waypointRange" />
                         </div>
      
-              <img onclick="deleteWaypoint(${nblab})" row="${nblab}" class="deleteWaypoint" src="assets/images/pictos/cross.png" row="${nblab}" style="">
+              <img onclick="deleteWaypoint(${tid})" row="${tid}" class="deleteWaypoint" src="assets/images/pictos/cross.png" row="${tid}" style="">
 </div>`
-    waypoints[nblab] = {
-        name: "PlaceHolder",
-        range: trange
+
+    if (id === undefined) {
+        waypoints[nblab] = {
+            name: "PlaceHolder",
+            range: trange
+        }
+        nblab++
     }
-    nblab++
 
 
     container.append(waypoint);
     resetCan()
 
 }
+
+
+function fillWaypoints() {
+
+    let hasEle = false
+
+
+    if (dataRecords.length > 0) {
+        if (dataRecords[0].elevation) {
+            hasEle = true
+        }
+    }
+
+
+}
+
 
 function deleteWaypoint(row) {
 
@@ -131,10 +165,10 @@ function drawImageLabel(ctx, data, waypoint) {
     ctx.save()
 
     ctx.beginPath();
-    ctx.arc(data.label[0] , data.label[1] , w / 2, 0, Math.PI * 2);
+    ctx.arc(data.label[0], data.label[1], w / 2, 0, Math.PI * 2);
     ctx.stroke();
     ctx.clip();
-    ctx.drawImage(waypoint.image, data.label[0]-w / 2, data.label[1]-h / 2, w, h);
+    ctx.drawImage(waypoint.image, data.label[0] - w / 2, data.label[1] - h / 2, w, h);
 
     ctx.restore()
 }

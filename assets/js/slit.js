@@ -76,7 +76,7 @@ function slitRect(frames, rect, n) {
     let skew = false
     // let skew = stripe.skew
     let angle = 30
-
+    console.log(rect);
     let tfps = 1
 
 

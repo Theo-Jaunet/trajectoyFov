@@ -264,9 +264,10 @@ function iniMap() {
         base = [dataRecords[0].latitude, dataRecords[0].longitude]
     }
     map = L.map('map', {zoomControl: false}).setView(base, 13);
-
-    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenTopoMap contributors'
+    // opentopomap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenTopoMap contributors',
+        maxNativeZoom: 17
     }).addTo(map);
 
     mapCan = cloneCanvas(canvas)

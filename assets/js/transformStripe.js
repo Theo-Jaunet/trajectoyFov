@@ -16,6 +16,7 @@ let nInterRow = 0
 
 let transforms = {
     "spike": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
+    "direction": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "color": {
         options: [{"type": "color", name: "Color", value: "#555"}, {
             "type": "range",
@@ -26,6 +27,8 @@ let transforms = {
     "grayscale": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "blur": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "opacity": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
+    "height": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
+    "border": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "brightness": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "invert": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
     "pixelate": {options: [{"type": "range", name: "Intensity", value: 0.5}]},
@@ -99,11 +102,23 @@ function slicedLinear(canvas, interval) {
 function applyTransform(can, type, val, val2 = undefined) {
     if (type === "spike") {
         can = jagged(can)
+    } else if (type === "direction") {
+
+        can = triangles(can, val)
+
     } else if (type === "color") {
         can = colored(can, val, val2) // color then alpha
     } else if (type === "opacity") {
 
         can = opacity(can, val)
+
+    } else if (type === "height") {
+
+        can = height(can, val)
+
+    } else if (type === "border") {
+
+        can = border(can, val)
 
     } else if (type === "brightness") {
         can = brightness(can, val)
@@ -173,6 +188,18 @@ function stripeTransform(canvas, interval) {
 
             tcan = opacity(tcan, interval.transform.values["Intensity"])
 
+        } else if (interval.transform.type === "height") {
+
+            tcan = height(tcan, interval.transform.values["Intensity"])
+
+        } else if (interval.transform.type === "border") {
+
+            tcan = border(tcan, interval.transform.values["Intensity"])
+
+        } else if (interval.transform.type === "direction") {
+
+            tcan = triangles(tcan, interval.transform.values["Intensity"])
+
         } else if (interval.transform.type === "brightness") {
             tcan = brightness(tcan, interval.transform.values["Intensity"])
         } else if (interval.transform.type === "grayscale") {
@@ -200,12 +227,55 @@ function stripeTransform(canvas, interval) {
 }
 
 
+function height(canvas, n) {
+
+    let w = canvas.width;
+    let h = canvas.height;
+
+
+    const tcan = document.createElement("canvas");
+    tcan.width = w
+    tcan.height = h
+
+    let offset = Math.round((h * n))
+    const tcon = tcan.getContext("2d")
+
+    tcon.save()
+    console.log(offset);
+    tcon.drawImage(canvas, 0,
+        0,
+        w,
+        h,
+        0,
+        (h/2) - (offset/2),
+        w,
+        offset)
+
+    tcon.restore()
+    return tcan
+}
+
+
+function border(canvas, n) {
+
+    let tcon = canvas.getContext('2d');
+    let w = canvas.width;
+    let h = canvas.height * n;
+
+    tcon.save()
+    tcon.fillStyle = "#FF0000";
+    tcon.fillRect(0, 0, w, h);
+    tcon.fillRect(0, canvas.height - h, w, h);
+    tcon.restore()
+    return canvas
+}
+
 function colored(canvas, color, alpha) {
 
     let tcon = canvas.getContext('2d');
     let w = canvas.width;
     let h = canvas.height;
-    console.log(color);
+
     tcon.save()
     tcon.fillStyle = color;
     tcon.globalAlpha = alpha;
@@ -213,6 +283,7 @@ function colored(canvas, color, alpha) {
     tcon.restore()
     return canvas
 }
+
 
 function grayscale(canvas, n) {
 
@@ -247,6 +318,7 @@ function pixelate(canvas, n) {
     const ctx = canvas.getContext("2d");
     let currPx = w * h;
     if (n <= 1) {
+        n = n / 20
         n = Math.round((currPx / 2) * n)
     }
 
@@ -318,6 +390,60 @@ function opacity(canvas, alpha) {
     tcon.globalAlpha = alpha
     tcon.drawImage(canvas, 0, 0)
     tcon.globalAlpha = 1
+    return can
+}
+
+
+function triangles(canvas, val) {
+    const toothHeight = 140 * val
+    const toothWidth = 180 * val
+
+
+    console.log("klalala");
+    let can = document.createElement('canvas');
+
+    can.width = canvas.width;
+    can.height = canvas.height;
+
+    let x = 0
+    let y = 0
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    let ctx = can.getContext('2d');
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+
+    // top
+    let teeth = Math.floor(can.width / toothWidth);
+
+    for (let i = 0; i < teeth; i++) {
+        let px = x + i * toothWidth;
+        ctx.lineTo(px + toothWidth, toothHeight);
+        ctx.lineTo(px + toothWidth, y);
+    }
+    x = can.width
+    y = can.height - toothHeight
+    ctx.lineTo(x, 0);
+    ctx.lineTo(x, y);
+    // bot
+    for (let i = 0; i < teeth; i++) {
+        let px = x - i * toothWidth;
+        ctx.lineTo(px - toothWidth, y + toothHeight);
+        ctx.lineTo(px - toothWidth, y);
+    }
+
+
+    ctx.lineTo(0, y);
+    ctx.lineTo(0, 0);
+
+    ctx.closePath();
+
+    ctx.clip();
+    ctx.drawImage(canvas, 0, 0)
+    // document.getElementById("debugger").appendChild(can)
     return can
 }
 
