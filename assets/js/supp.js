@@ -1,9 +1,12 @@
-const transformsExamples = ["supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png"]
+const transformsExamples = ["assets/suppFiles/transform/1.png",
+    "assets/suppFiles/transform/2.png",
+    "assets/suppFiles/transform/3.png",
+    "assets/suppFiles/transform/4.png",
+    "assets/suppFiles/transform/5.png",
+    "assets/suppFiles/transform/6.png",
+    "assets/suppFiles/transform/7.png",
+    "assets/suppFiles/transform/8.png"
+    ]
 
 let savedTransform = 0
 
@@ -41,7 +44,7 @@ docReady(function () {
 
     let tcon2 = document.getElementById("eclList");
     let target2 = document.getElementById("eclPreview");
-    fillExamples(tcon2, eclExamples, target2, "ecl",transformsExamples);
+    fillExamples(tcon2, eclExamples, target2, "ecl",eclExamples);
 
 })
 
