@@ -204,9 +204,17 @@ function prepMapping() {
 function resetCan() {
     prepMapping()
 
-    makeMapping(stroke.map(d => {
-        return {x: d[0], y: d[1]}
-    }))
+
+    if (mapFlag) {
+
+        let tcont = mapCan.getContext("2d")
+        tcont.clearRect(0, 0, 9999, 9999)
+        fakeMapDraw()
+    } else {
+        makeMapping(stroke.map(d => {
+            return {x: d[0], y: d[1]}
+        }))
+    }
 }
 
 

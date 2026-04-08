@@ -16,12 +16,14 @@ const eclExamples = ["supp/transforms/test.png",
 
 let savedEcl = 0
 
-const activityExamples = ["supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png",
-    "supp/transforms/test.png"]
+const activityExamplesFrame = ["assets/suppFiles/activities/frame/1.png",
+    "assets/suppFiles/activities/frame/2.png",
+    "assets/suppFiles/activities/frame/3.png"]
+
+const activityExamplesProj = ["assets/suppFiles/activities/projection/1.png",
+    "assets/suppFiles/activities/projection/2.png",
+    "assets/suppFiles/activities/projection/3.png"]
+
 
 let savedActivity = 0
 
@@ -29,33 +31,33 @@ docReady(function () {
 
     let tcon = document.getElementById("transfromList");
     let target = document.getElementById("transformPreview");
-    fillExamples(tcon, transformsExamples, target, "transform")
+    fillExamples(tcon, transformsExamples, target, "transform",transformsExamples)
 
 
     let tcon3 = document.getElementById("activityList");
     let target3 = document.getElementById("activityPreview");
-    fillExamples(tcon3, activityExamples, target3, "activity");
+    fillExamples(tcon3, activityExamplesFrame, target3, "activity",activityExamplesProj);
 
 
     let tcon2 = document.getElementById("eclList");
     let target2 = document.getElementById("eclPreview");
-    fillExamples(tcon2, eclExamples, target2, "ecl");
+    fillExamples(tcon2, eclExamples, target2, "ecl",transformsExamples);
 
 })
 
 
-function fillExamples(container, list, target, type) {
+function fillExamples(container, list, target, type,proj) {
 
 
     for (let i = 0; i < list.length; i++) {
         let tel = makeSinge(list[i], i)
         if (i === 0) {
             tel.classList.add("selectedIm")
-            target.innerHTML = `<img src="${list[i]}"/>`
+            target.innerHTML = `<img src="${proj[i]}"/>`
         }
         tel.classList.add(type)
         tel.onmouseover = function () {
-            target.innerHTML = `<img src="${list[i]}"/>`
+            target.innerHTML = `<img src="${proj[i]}"/>`
         }
 
         tel.onmouseout = function () {

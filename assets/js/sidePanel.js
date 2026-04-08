@@ -31,8 +31,15 @@ function makeNewLabel(id = undefined, wp = undefined) {
 
     let trange = Math.random()
 
+    let temFrame = Math.floor(gframes.length * trange)
+
+    img = gframes[temFrame]
+
+    let timg = img.toDataURL()
+
+
     waypoint.innerHTML = `<div class="waypointProfile">
-                            <div row="${tid}" onclick="updateWaypointImg(this,${tid})" class="waypointImg" style="background-image: url('${img}')">
+                            <div row="${tid}" onclick="updateWaypointImg(this,${tid})" class="waypointImg" style="background-image: url('${timg}')">
                         </div>
                         <div class="waypointData"> 
                         <input type="text" oninput="updateName(this,${tid})" row="${tid}" value="${name}" class="waypointTitle" />
@@ -45,7 +52,9 @@ function makeNewLabel(id = undefined, wp = undefined) {
     if (id === undefined) {
         waypoints[nblab] = {
             name: "PlaceHolder",
-            range: trange
+            range: trange,
+            image:img,
+            useImg: true,
         }
         nblab++
     }
@@ -89,6 +98,10 @@ function updateName(elem, row) {
 function updateRange(elem, row) {
     let range = elem.value
     waypoints[row].range = range;
+    let temFrame = Math.min(gframes.length-1, Math.floor(gframes.length * range))
+
+    let img = gframes[temFrame]
+    waypoints[row].image = img
     resetCan()
 }
 
@@ -124,7 +137,7 @@ function drawWaypoints() {
     if (mapFlag)
         traj = [...mapStroke]
     if (traj.length > 2) {
-        let off = 115
+        let off = 200
         let seg = makeSegments(traj)
 
         let canvas = document.getElementById('main')
@@ -154,8 +167,8 @@ function drawWaypoints() {
 
 
 function drawImageLabel(ctx, data, waypoint) {
-    let w = 40
-    let h = 40
+    let w = 65
+    let h = 65
 
     ctx.beginPath();
     ctx.moveTo(data.link[0][0], data.link[0][1]);
@@ -171,6 +184,8 @@ function drawImageLabel(ctx, data, waypoint) {
     ctx.drawImage(waypoint.image, data.label[0] - w / 2, data.label[1] - h / 2, w, h);
 
     ctx.restore()
+
+    ctx.fillText(waypoint.name, data.label[0]+w/2, data.label[1]);
 }
 
 function drawTextLabel(ctx, data, waypoint) {
