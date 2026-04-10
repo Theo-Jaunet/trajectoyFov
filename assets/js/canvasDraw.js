@@ -273,7 +273,7 @@ function iniMap() {
     }
     map = L.map('map', {zoomControl: false}).setView(base, 13);
     // opentopomap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenTopoMap contributors',
         maxNativeZoom: 17
     }).addTo(map);
