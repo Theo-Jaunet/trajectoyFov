@@ -3,17 +3,18 @@
     border: #555555 1px solid;
     max-width: 55vh;
     border-radius: 5px;
+    max-height: 500px;
 }
 
 .stripeRow {
     border-radius: 5px;
-    width: 85%;
+    width: 95%;
     margin-bottom: 0;
     border: 1px solid #555;
     height: 100px;
     display: flex;
     float: right;
-    margin-top:5px;
+    margin-top: 5px;
 }
 
 .stripeRow canvas {
@@ -25,7 +26,7 @@
 }
 
 .stripeRow .slitInfo {
-    width: 20%;
+    width: 25%;
     padding-left: 3px;
 }
 
@@ -35,6 +36,7 @@
     height: 22px;
     cursor: pointer;
 }
+
 .fovRadio {
     height: 13px;
     margin-bottom: 2px;
@@ -44,11 +46,25 @@
     border-radius: 5px;
 }
 
-.stripeTypes {
+.stripeTypes, .sampleSize {
     display: flex;
     justify-content: stretch;
-    column-gap: 10px;
+    column-gap: 4px;
+    height: 23px;
 }
+
+.sampleSize span {
+    display: flex;
+}
+
+.sampleSize p {
+    vertical-align: middle;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 0 !important;
+
+}
+
 
 .stripeTypes p {
     vertical-align: middle;
@@ -64,10 +80,19 @@ span input {
     height: 25px !important;
 }
 
+.stripeFps {
+    /*height: 44px;*/
+    display: flex;
+}
+
 .stripeFps p {
     font-weight: 600;
     font-size: 13px;
     margin-bottom: 0 !important;
+}
+
+.stripeFps span input {
+    margin-bottom: 3px;
 }
 
 .stripeRun {
@@ -94,6 +119,18 @@ span input {
 
 }
 
+.sampleScale {
+    display: flex;
+}
+
+
+.sampleScale p {
+    vertical-align: middle;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 0 !important;
+}
+
 #videoOverlay {
     position: absolute;
     top: 0px;
@@ -116,5 +153,438 @@ span input {
 
 #pointer1:hover, #pointer2:hover {
 
-   fill: #cf3e3e !important;
+    fill: #cf3e3e !important;
 }
+
+.delRowImg {
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+}
+
+#stripeBrush {
+    border: #555555 1px solid;
+    border-radius: 5px;
+    position: absolute;
+    left: 28.5%;
+    width: 72%;
+    background-color: rgba(149, 148, 148, 0.24);
+    display: none;
+}
+
+.stripeBrushBtn {
+    width: 20px;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.selectedBrush {
+
+    border: #cf3e3e 1px solid !important;
+
+}
+
+
+/*SIDE PANEL FOR PHOTOS*/
+
+#sidebar {
+    width: 250px;
+    /*background-color: #fff;*/
+    right: 0;
+    height: 54vh;
+
+    /*top: 0;*/
+    /*height: 34vh;*/
+
+    z-index: 99;
+    text-align: center;
+    padding: 3px;
+    border-radius: 5px;
+
+    border: solid 1px #717171;
+
+}
+
+#sidebar h5 {
+    font-size: 1.9rem;
+    font-weight: 550;
+    padding: 5px;
+    box-shadow: 0px 40px 1px -40px #555555;
+    margin-bottom: 5px;
+}
+
+.sideHeader div {
+    padding: 10px;
+    user-select: none;
+    margin: auto; /* Magic! */
+}
+
+#strokeBtn, #cropBG, #mapToggle {
+    width: 20px;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+    z-index: 999;
+}
+
+#navButtonList button {
+color: #eee;
+}
+
+
+.stripeCarets line {
+    stroke: #555555;
+    stroke-width: 2;
+}
+
+.stripeRects rect {
+    fill: #555555;
+    /*stroke: ;*/
+}
+.interRow {
+    width : 100%;
+    display: flex;
+    height:22px;
+}
+
+.interSettings {
+    width : 29%;
+    height:22px;
+}
+
+.interSvg {
+    width : 71.6%;
+    height:22px;
+}
+
+.intervalBtn {
+    width: 18px;
+    height: 18px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+}
+
+.displayOption {
+    width: 65px;
+    text-align: center;
+    height: 20px;
+    border: #555555 1px solid;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+    z-index: 999;
+
+}
+
+.SelectedOption {
+    border: red 1px solid;
+}
+
+.addRow {
+    width: 17px;
+    height: 17px;
+    border: #555555 1px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    padding: 2px;
+    background-color: #fff;
+    z-index: 999;
+    margin-left: 25%;
+}
+
+
+/* STRIPE ROW (compact): slit tools, options button, summary */
+
+.stripeTitle {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.stripeGear {
+    height: 24px;
+    line-height: normal;
+    padding: 0 8px;
+    margin: 0 0 0 4px;
+    font-size: 12px;
+}
+
+.stripeBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.stripeBadge {
+    font-size: 11px;
+    line-height: 16px;
+    padding: 0 6px;
+    border: 1px solid #999;
+    border-radius: 10px;
+    background: #f3f3f3;
+    color: #333;
+}
+
+.stripeBadge.on {
+    background: #e7f1ff;
+    border-color: #538ed1;
+}
+
+.stripeBadge.base {
+    background: #fff;
+}
+
+.stripeCan.stripeBusy {
+    opacity: 0.45;
+    cursor: progress;
+}
+
+
+/* STRIPE SETTINGS DIALOG */
+
+.stripeModal {
+    width: min(740px, 94vw);
+    max-height: 92vh;
+    padding: 0;
+    border: 1px solid #555;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.stripeModal[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.stripeModal::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.stripeModal [hidden] {
+    display: none !important;
+}
+
+.stripeModal :focus-visible {
+    outline: 2px solid #538ed1;
+    outline-offset: 1px;
+}
+
+.ssTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #ccc;
+}
+
+.ssTop h4 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.ssIconBtn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 24px;
+    font-size: 20px;
+    margin: 0;
+}
+
+#stripeSettingsBody {
+    overflow: auto;
+    padding: 4px 16px 8px 16px;
+    flex: 1;
+}
+
+.ssSection {
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.ssHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.ssHead input {
+    margin: 0;
+}
+
+.ssHead label {
+    margin: 0;
+    font-weight: 700;
+}
+
+.ssHelp {
+    font-size: 12px;
+    color: #555;
+    margin: 4px 0 2px 0;
+}
+
+.ssGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    margin-top: 6px;
+}
+
+.ssField {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ssField label {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.ssField input[type=number], .ssField select {
+    height: 30px;
+    margin: 0;
+    width: 100%;
+    padding: 2px 6px;
+}
+
+.ssField input[type=color] {
+    width: 56px;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+}
+
+.ssCheck {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 8px;
+}
+
+.ssCheck input {
+    margin: 0;
+    order: -1;
+}
+
+.ssCheck .ssHint {
+    flex-basis: 100%;
+}
+
+.ssWide {
+    grid-column: 1 / -1;
+}
+
+.ssHint {
+    font-size: 11px;
+    color: #666;
+}
+
+.ssRange {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ssRange input {
+    flex: 1;
+    margin: 0;
+}
+
+.ssRange output {
+    min-width: 46px;
+    text-align: right;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ssOff {
+    opacity: 0.45;
+}
+
+.ssWarn {
+    font-size: 12px;
+    background: #fff4e5;
+    border: 1px solid #f0b36a;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 6px 0 0 0;
+}
+
+.ssBtn {
+    height: 30px;
+    line-height: normal;
+    padding: 0 10px;
+    margin: 0 6px 6px 0;
+    font-size: 12px;
+}
+
+.ssAdvanced summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ssAdvanced .ssField {
+    margin-top: 6px;
+}
+
+.ssPreviewBox {
+    grid-column: 1 / -1;
+}
+
+.ssPreview {
+    width: 320px;
+    max-width: 100%;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #222;
+    display: block;
+}
+
+.ssFoot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-top: 1px solid #ccc;
+    background: #f7f7f7;
+}
+
+.ssFoot button {
+    margin: 0 0 0 6px;
+    height: 32px;
+    line-height: normal;
+    padding: 0 14px;
+}
+
+.ssProgressBox {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    min-width: 0;
+}
+
+.ssProgressBox progress {
+    width: 160px;
+}
+
