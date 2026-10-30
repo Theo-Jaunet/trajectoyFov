@@ -21,6 +21,8 @@ let _baseMeshHeight;
 let _navRaf = 0, _drawRaf = 0;
 
 
+let chartType = false
+
 /* ------------------------------------------------------------------ view transform */
 
 function screenToWorld(p) { return [(p[0] - pathView.x) / pathView.k, (p[1] - pathView.y) / pathView.k]; }
@@ -194,6 +196,9 @@ function redrawMapping() {
     if (stroke.length < 2) { prepMapping(); return; }
     applyRibbonScale();
     makeMapping(screenPath(stroke));
+
+    if (chartType) {
+    }
 }
 
 function applyRibbonScale() {
@@ -366,6 +371,16 @@ function mapToggle() {
         delMap()
     }
     if (mode === "stroke") initDraw();
+    updateNavState();
+}
+
+
+function chartToggle() {
+    delDraw();
+    mapFlag = false
+
+    mode = "zoom"
+    chartType = !chartType
     updateNavState();
 }
 

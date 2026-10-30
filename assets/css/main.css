@@ -221,7 +221,7 @@ span input {
     margin: auto; /* Magic! */
 }
 
-#strokeBtn, #cropBG, #mapToggle {
+#strokeBtn, #cropBG, #mapToggle, #chartToggle {
     width: 20px;
     height: 20px;
     border: #555555 1px solid;

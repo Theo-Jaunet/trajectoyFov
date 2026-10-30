@@ -249,11 +249,11 @@ async function setup() {
         setMeshHeight(+e.target.value)                  // updates the base width, keeps the zoom scaling, handles the map mode
         // let can = d3.select(`.stripeCan[row='${selectedStripe}'`).node()
 
-/*
-        makeMapping(screenPath(stroke.map(d => {
-            return {x: d[0], y: d[1]}
-        })))
-*/
+        /*
+                makeMapping(screenPath(stroke.map(d => {
+                    return {x: d[0], y: d[1]}
+                })))
+        */
 
         // panzoom.pan(10, 10)
         // panzoom.zoom(2, { animate: true })
@@ -279,6 +279,12 @@ async function setup() {
     }
 
 
+    document.getElementById("mainChart").onchange = async e => {
+
+        loadData(e.target.files[0], e)
+    }
+
+
     document.getElementById("waypointFile").onchange = async e => {
 
         loadWaypointImage(e.target.files[0], e)
@@ -295,7 +301,259 @@ async function setup() {
         makeNewLabel()
     }
 
+}
 
+function loadOptions(data) {
+
+    const selectX = document.getElementById("chartX")
+    const selectY = document.getElementById("chartY")
+
+    let keys = Object.keys(data[0])
+    let options = ""
+
+    for (let i = 0; i < keys.length; i++) {
+        options += `<option value="${keys[i]}">${keys[i]}</option>`
+    }
+
+    selectX.innerHTML = options
+    selectY.innerHTML = options
+
+
+    selectX.addEventListener("change", drawChart)
+    selectY.addEventListener("change", drawChart)
+
+}
+
+function determineDataType(data, key) {
+    const values = data
+        .map(d => d[key])
+        .filter(v => v != null && String(v).trim() !== "")
+        .map(v => String(v).trim());
+
+    // if (values.length === 0) return "unknown";
+
+    const parseDate = d3.timeParse("%Y-%m-%d");
+
+    const isTemporal = values.every(v => parseDate(v) !== null);
+    if (isTemporal) return "temporal";
+
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+
+    if (values.every(v => timePattern.test(v))) {
+        return "temporal";
+    }
+
+    const isLinear = values.every(v => Number.isFinite(Number(v)));
+    if (isLinear) return "linear";
+
+    return "categorical";
+}
+
+function makeAxis(type, data, column) {
+
+    if (type === "temporal") {
+        const value = data.find(d => d[column]?.trim())?.[column];
+
+        if (!value) return null;
+
+        let parse;
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            parse = d3.timeParse("%Y-%m-%d");
+        } else if (/^\d{2}:\d{2}$/.test(value)) {
+            parse = d3.timeParse("%H:%M");
+        } else if (/^\d{2}:\d{2}:\d{2}$/.test(value)) {
+            parse = d3.timeParse("%H:%M:%S");
+        } else {
+            return null;
+        }
+
+
+        const dates = data
+            .map(d => parse(d[column]))
+            .filter(d => d !== null);
+
+
+        return [d3.scaleTime()
+            .domain(d3.extent(dates))
+            .range([0, 1]), parse]
+
+    } else if (type === "linear") {
+        let domain = d3.extent(data.map(d => d[column]))
+
+        return d3.scaleLinear()
+            .domain(domain)
+            .range([0, 1])
+    } else {
+        return d3.scaleBand()
+            .domain([...new Set(data.map(d => d[column]))])
+            .range([0, 1]);
+    }
+
+}
+function drawChart() {
+    const selectX = document.getElementById("chartX");
+    const selectY = document.getElementById("chartY");
+
+    const typeX = determineDataType(megaData, selectX.value);
+    const typeY = determineDataType(megaData, selectY.value);
+
+    if (typeX === "unknown" || typeY === "unknown") return;
+
+    let xScale = makeAxis(typeX, megaData, selectX.value);
+    let parseX = d => d;
+    if (Array.isArray(xScale)) [xScale, parseX] = xScale;
+
+    let yScale = makeAxis(typeY, megaData, selectY.value);
+    let parseY = d => d;
+    if (Array.isArray(yScale)) [yScale, parseY] = yScale;
+
+    const can = document.getElementById("main");
+    const context = can.getContext("2d");
+    context.clearRect(0, 0, can.width, can.height);
+
+    const m = {
+        left:   can.width * 0.08,
+        right:  can.width * 0.05,
+        top:    can.height * 0.05,
+        bottom: can.height * 0.08,
+    };
+    const left = m.left, right = can.width - m.right;
+    const top = m.top,   bottom = can.height - m.bottom;
+
+    xScale.range([left, right]);
+    yScale.range([bottom, top]);
+
+    const px = d => xScale(parseX(d[selectX.value]));
+    const py = d => yScale(parseY(d[selectY.value]));
+
+   
+    context.beginPath();
+    const line = megaData.map(d => [px(d), py(d)]);
+    line.forEach(([x, y], i) => i === 0 ? context.moveTo(x, y) : context.lineTo(x, y));
+    context.strokeStyle = "#000";
+    context.stroke();
+
+    stroke = line;
+    redrawMapping();
+
+    context.font = "10px sans-serif";
+    axisBottom(context, xScale, bottom);
+    axisLeft(context, yScale, left);
+}
+
+function axisBottom(ctx, scale, y, {count = 10, size = 6, pad = 3} = {}) {
+    const ticks = scale.ticks ? scale.ticks(count) : scale.domain();
+    const format = scale.tickFormat ? scale.tickFormat(count) : d => d;
+    const offset = scale.bandwidth ? scale.bandwidth() / 2 : 0; // center ticks on bands
+    const [r0, r1] = scale.range();
+
+    ctx.beginPath();
+    ctx.moveTo(r0, y + 0.5);            // +0.5 keeps 1px lines crisp
+    ctx.lineTo(r1, y + 0.5);
+    for (const t of ticks) {
+        const x = Math.round(scale(t) + offset) + 0.5;
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + size);
+    }
+    ctx.strokeStyle = "currentColor";
+    ctx.stroke();
+
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    for (const t of ticks) {
+        ctx.fillText(format(t), scale(t) + offset, y + size + pad);
+    }
+    console.log("dsdsadas Axis");
+}
+
+function axisLeft(ctx, scale, x, {count = 10, size = 6, pad = 3} = {}) {
+    const ticks = scale.ticks ? scale.ticks(count) : scale.domain();
+    const format = scale.tickFormat ? scale.tickFormat(count) : d => d;
+    const offset = scale.bandwidth ? scale.bandwidth() / 2 : 0;
+    const [r0, r1] = scale.range();
+
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, r0);
+    ctx.lineTo(x + 0.5, r1);
+    for (const t of ticks) {
+        const y = Math.round(scale(t) + offset) + 0.5;
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - size, y);
+    }
+    ctx.strokeStyle = "currentColor";
+    ctx.stroke();
+
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (const t of ticks) {
+        ctx.fillText(format(t), x - size - pad, scale(t) + offset);
+    }
+}
+
+
+function loadData(file, e) {
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        const text = e.target.result;
+        // const data = d3.csvParse(text);
+
+        const data = parseDelimited(text);
+
+        megaData = data
+        loadOptions(data)
+    }
+    reader.readAsText(e.target.files[0]);
+
+}
+
+
+function detectDelimiter(text, candidates = [",", ";", "\t", "|"]) {
+    // Count a delimiter on one line, ignoring anything inside double quotes
+    const countOutsideQuotes = (line, delim) => {
+        let inQuotes = false, n = 0;
+        for (const ch of line) {
+            if (ch === '"') inQuotes = !inQuotes;
+            else if (ch === delim && !inQuotes) n++;
+        }
+        return n;
+    };
+
+    const lines = text.split(/\r?\n/).filter(l => l.trim()).slice(0, 10);
+    if (!lines.length) return ",";
+
+    let best = ",", bestScore = -1;
+    for (const delim of candidates) {
+        const counts = lines.map(l => countOutsideQuotes(l, delim));
+        const mode = counts.sort((a, b) => a - b)[Math.floor(counts.length / 2)];
+        if (mode === 0) continue; // delimiter doesn't appear in a typical line
+
+        // Fraction of lines with the same count as the typical line
+        const consistency = counts.filter(c => c === mode).length / counts.length;
+        const score = consistency * 1000 + mode; // consistency first, then column count
+        if (score > bestScore) { bestScore = score; best = delim; }
+    }
+    return best;
+}
+
+function parseDelimited(text) {
+    text = text.replace(/^\uFEFF/, ""); // strip BOM
+
+    // Excel sometimes writes "sep=;" as the first line
+    let delimiter;
+    const sep = text.match(/^sep=(.)\r?\n/i);
+    if (sep) {
+        delimiter = sep[1];
+        text = text.slice(sep[0].length);
+    } else {
+        delimiter = detectDelimiter(text);
+    }
+
+    return d3.dsvFormat(delimiter).parse(text);
 }
 
 
@@ -735,6 +993,10 @@ function fakeGpx() {
 
 function fakeBg() {
     document.getElementById("mainBg").click()
+}
+
+function fakeData() {
+    document.getElementById("mainChart").click()
 }
 
 

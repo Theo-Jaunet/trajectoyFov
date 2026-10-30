@@ -5,6 +5,7 @@ const STRIPE_DEFAULTS = {
     birdsEye: {enabled: false, hfov: 70, angleBy: "pitch", horizon: 0.4, pitch: 20, samples: 3},
     fluid: false,
     fluidOpts: {mode: "ground", seedFrame: 0, scaleToPath: true, shakeGain: 1, tauHighpass: 1},
+    sweep: {enabled: false, direction: "right", endMode: "edge", endX: 0.5, ease: "linear", positionPer: "frame"},
     emphasis: {enabled: false, preset: "balanced", mode: "near", boost: 0.7, fade: 0.35, movingBoost: 0.8, smooth: 0.5,
         tintOn: false, tint: "#00c8ff", tintAmount: 0.35},
     flowOpts: {halfWindow: 1, minFlow: 0.3, movingTol: 1, context: 0.6},
@@ -46,6 +47,17 @@ function readDraft(s) {
     D.fluid = !!s.fluid;
     Object.assign(D.fluidOpts, s.fluidOpts || {});
     D.fluidOpts.mode = ssEnum(D.fluidOpts.mode, ["ground", "shake"], "ground");
+
+    const w = s.sweep;
+    if (w) {
+        D.sweep.enabled = !(typeof w === "object" && w.enabled === false);
+        if (typeof w === "object") {
+            D.sweep.direction = ssEnum(w.direction, ["right", "left"], "right");
+            if (w.endX !== undefined && w.endX !== null && Number.isFinite(+w.endX)) { D.sweep.endMode = "custom"; D.sweep.endX = +w.endX; }
+            D.sweep.ease = ssEnum(w.ease, ["linear", "smooth"], "linear");
+            D.sweep.positionPer = ssEnum(w.positionPer, ["frame", "column"], "frame");
+        }
+    }
 
     const e = s.emphasis;
     if (e) {
@@ -92,6 +104,11 @@ function writeDraft(s, D) {
     const f = D.fluidOpts;
     s.fluidOpts = {mode: f.mode, seedFrame: Math.round(num(f.seedFrame, 0, 1e6, 0)), scaleToPath: !!f.scaleToPath,
         shakeGain: num(f.shakeGain, 0, 3, 1), tauHighpass: num(f.tauHighpass, 0.1, 10, 1)};
+
+    const w = D.sweep;      // endX null = sweep to the frame edge; read by slitSweep (slit.sweep.js)
+    s.sweep = {enabled: !!w.enabled, direction: w.direction === "left" ? "left" : "right",
+        endX: w.endMode === "custom" ? num(w.endX, 0, 1, 0.5) : null,
+        ease: w.ease === "smooth" ? "smooth" : "linear", positionPer: w.positionPer === "column" ? "column" : "frame"};
 
     const e = D.emphasis;
     s.emphasis = {enabled: !!e.enabled, mode: e.mode, boost: num(e.boost, 0, 2, 0.7), fade: num(e.fade, 0, 1, 0.35),
@@ -262,7 +279,7 @@ function buildStripeSettings() {
         ssCheck("Flip 180°", () => D.flip, v => D.flip = v),
         ssCheck("Skew when merged", () => D.skew, v => D.skew = v, "Shears this stripe when the stripes are merged."),
         ssRange("Scale in merged stripe", () => D.scale, v => D.scale = v, {min: 0.1, max: 2, step: 0.1}));
-    ssRule(slitSec.body.children[1], {enable: () => !bird()});   // "Rotate 90°" is ignored by the bird's-eye view
+    ssRule(slitSec.body.children[1], {enable: () => !bird() && !D.sweep.enabled});   // "Rotate 90°" is ignored by the bird's-eye view and the sweep
     rectInfo.textContent = s.rect
         ? `Rectangle: x ${s.rect.x.toFixed(3)}, y ${s.rect.y.toFixed(3)}, w ${s.rect.width.toFixed(3)}, h ${s.rect.height.toFixed(3)}`
         : (s.points ? "Line slit" : "No slit drawn yet.");
@@ -288,9 +305,39 @@ function buildStripeSettings() {
     ssRule(lf[5], {show: () => D.lengthMode !== "frames"});
     ssRule(lf[7], {enable: () => D.average});
 
+    /* ---- Sweeping slit ---- */
+    const sw = D.sweep;
+    const sweepOpts = () => ({direction: sw.direction, endX: sw.endMode === "custom" ? +sw.endX : null, ease: sw.ease, positionPer: sw.positionPer});
+    const sweepSec = ssSection("Sweeping slit", {toggle: {get: () => sw.enabled, set: v => sw.enabled = v},
+            help: "A vertical slit that moves across the frame during the whole video, starting from the drawn rectangle. Each column of the stripe is what the slit sees at that moment. Uses the sampling and length settings above."},
+        ssSelect("Direction", [["right", "Left → right"], ["left", "Right → left"]], () => sw.direction, v => sw.direction = v,
+            "The slit starts at the drawn rectangle and moves this way."),
+        ssSelect("End position", [["edge", "Frame edge"], ["custom", "Custom"]], () => sw.endMode, v => sw.endMode = v),
+        ssRange("End x", () => sw.endX, v => sw.endX = v, {min: 0, max: 1, step: 0.01,
+            hint: "Left edge of the slit at the last frame: 0 = left of the frame, 1 = right."}),
+        ssSelect("Speed", [["linear", "Constant"], ["smooth", "Slow start and end"]], () => sw.ease, v => sw.ease = v),
+        ssSelect("Slit position", [["frame", "Follows every frame"], ["column", "One position per column"]], () => sw.positionPer, v => sw.positionPer = v,
+            "One position per column gives sharper columns when many frames are averaged."),
+        ssPreview("sweep", "First and last slit position (cyan), slit at the preview frame (yellow)", (cv, frames, st, k) => {
+            drawSweepDebug(cv, frames, st.rect, sweepOpts(), k);
+            return st.rect.height < st.rect.width ? "The rectangle is wider than tall: a sweeping slit is meant to be vertical." : "";
+        }, st => (st.type === "line" ? "The sweeping slit needs a rectangular slit." : null)));
+    ssRule(sweepSec.body.children[2], {show: () => sw.endMode === "custom"});
+    const sweepWarn = ssEl("div", {class: "ssWarn", role: "status"});
+    ssRule(sweepWarn, {show: () => {
+            const ignored = [];
+            if (D.fov) ignored.push("Rotate 90°");
+            if (bird()) ignored.push("bird's-eye view");
+            if (D.fluid) ignored.push("fluid slit");
+            if (em().enabled) ignored.push("flow emphasis");
+            sweepWarn.textContent = sw.enabled && ignored.length ? `Ignored while the sweeping slit is on: ${ignored.join(", ")}.` : "";
+            return !!sweepWarn.textContent;
+        }});
+    sweepSec.insertBefore(sweepWarn, sweepSec.body);
+
     const be = D.birdsEye;
     const birdSec = ssSection("Bird's-eye view", {toggle: {get: () => be.enabled, set: v => be.enabled = v},
-        help: "Rectifies the ground slit to a top-down view with a simple camera model, so the ground stripe has a uniform scale."},
+            help: "Rectifies the ground slit to a top-down view with a simple camera model, so the ground stripe has a uniform scale."},
         ssNumber("Horizontal field of view", () => be.hfov, v => be.hfov = v, {min: 20, max: 179, step: 1, unit: "°",
             hint: "Phones ≈ 65-70°, GoPro wide is much larger."}),
         ssSelect("Camera angle given by", [["pitch", "Pitch below the horizon"], ["horizon", "Row of the horizon"]], () => be.angleBy, v => be.angleBy = v),
@@ -308,7 +355,7 @@ function buildStripeSettings() {
     const fo = D.fluidOpts;
     const trackStatus = ssEl("div", {class: "ssHint ssStatus", id: "ssTrackStatus"});
     const fluidSec = ssSection("Fluid slit (tracking)", {toggle: {get: () => D.fluid, set: v => D.fluid = v},
-        help: "The slit follows the ground path and cancels running bounce, frame by frame."},
+            help: "The slit follows the ground path and cancels running bounce, frame by frame."},
         ssSelect("Mode", [["ground", "Follow the ground path + cancel bounce"], ["shake", "Cancel bounce / yaw only"]], () => fo.mode, v => fo.mode = v),
         ssNumber("Seed frame", () => fo.seedFrame, v => fo.seedFrame = v, {min: 0, max: Math.max(0, nFrames - 1), step: 1,
             hint: "A frame where the middle of the slit is on the path."}),
@@ -342,7 +389,7 @@ function buildStripeSettings() {
     const fadeF = ssRange("Mute far areas", () => em().fade, v => { em().fade = v; custom(); }, {min: 0, max: 1, step: 0.05,
         hint: "Less contrast and chroma where the flow clearly says \"far\". Rows without a reliable estimate are never changed."});
     const flowSec = ssSection("Flow emphasis (trees, poles, cars)", {toggle: {get: () => em().enabled, set: v => em().enabled = v},
-        help: "Uses optical flow: objects that cross the image faster than the rest are near. Side slits only (not rotated, not bird's-eye)."},
+            help: "Uses optical flow: objects that cross the image faster than the rest are near. Side slits only (not rotated, not bird's-eye)."},
         ssSelect("Emphasise", [["near", "Near objects"], ["moving", "Movers (counter-flow)"], ["both", "Both"]], () => em().mode, v => em().mode = v),
         presetField, boostF, fadeF,
         ssRange("Moving objects boost", () => em().movingBoost, v => em().movingBoost = v, {min: 0, max: 2, step: 0.05,
@@ -381,14 +428,15 @@ function buildStripeSettings() {
     ssRule(wf[1], {show: () => em().mode !== "moving"});
     const incompat = ssEl("div", {class: "ssWarn", role: "status"});
     ssRule(incompat, {show: () => {
-        const why = em().enabled && (D.fov ? "Flow emphasis is skipped while \"Rotate 90°\" is on." :
-            (bird() ? "Flow emphasis is skipped while the bird's-eye view is on." : ""));
-        incompat.textContent = why || "";
-        return !!why;
-    }});
+            const why = em().enabled && (D.sweep.enabled ? "Flow emphasis is skipped while the sweeping slit is on." :
+                (D.fov ? "Flow emphasis is skipped while \"Rotate 90°\" is on." :
+                    (bird() ? "Flow emphasis is skipped while the bird's-eye view is on." : "")));
+            incompat.textContent = why || "";
+            return !!why;
+        }});
     flowSec.insertBefore(incompat, flowSec.body);
 
-    body.append(frameRange, slitSec, lenSec, birdSec, fluidSec, flowSec);
+    body.append(frameRange, slitSec, lenSec, sweepSec, birdSec, fluidSec, flowSec);
     ssRefresh();
 }
 
@@ -432,14 +480,28 @@ async function ssApply({force = null, close = false} = {}) {
     msg.textContent = "Rendering…";
     bar.value = 0;
     try {
-        await makeSlit(s, n, {
-            force, signal: SS.abort.signal,
-            onProgress: (stage, f) => {
-                bar.value = f;
-                msg.textContent = (stage === "track" ? "Tracking the slit… " : "Measuring optical flow… ") + Math.round(100 * f) + "%";
-            },
-        });
-        msg.textContent = (typeof gframes !== "undefined" && gframes.length) ? "Done." : "Saved. Load a video to render the stripe.";
+        const frames = typeof gframes !== "undefined" ? gframes : [];
+        if (s.sweep && s.sweep.enabled) {
+            // the sweeping slit has no tracking / flow step: it is rendered directly (fluid, bird's-eye, emphasis and rotation are ignored)
+            if (!frames.length) msg.textContent = "Saved. Load a video to render the stripe.";
+            else if (!s.rect) msg.textContent = "Saved. Draw a rectangular slit on the video first.";
+            else {
+                msg.textContent = "Rendering the sweep…";
+                await new Promise(r => setTimeout(r));           // let the message paint before the synchronous render
+                slitSweep(frames, s.rect, n);
+                bar.value = 1;
+                msg.textContent = "Done.";
+            }
+        } else {
+            await makeSlit(s, n, {
+                force, signal: SS.abort.signal,
+                onProgress: (stage, f) => {
+                    bar.value = f;
+                    msg.textContent = (stage === "track" ? "Tracking the slit… " : "Measuring optical flow… ") + Math.round(100 * f) + "%";
+                },
+            });
+            msg.textContent = frames.length ? "Done." : "Saved. Load a video to render the stripe.";
+        }
     } catch (err) {
         const stopped = /abort/i.test(String(err && err.message));
         msg.textContent = stopped ? "Stopped." : "Error: " + (err && err.message || err);

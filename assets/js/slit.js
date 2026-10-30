@@ -1,5 +1,3 @@
-
-
 const MAX_STRIPE_W = 6000;
 const _scratch = [];
 
@@ -14,10 +12,6 @@ function scratchCanvas(k, w, h) {
     return c;
 }
 
-/**
- * Draw the source rectangle (sx,sy,sw,sh) of `src` into (dx,dy,dw,dh) of `ctx`,
- * reducing by at most 2:1 per step so that every source pixel contributes (box filter).
- */
 function drawBox(src, sx, sy, sw, sh, ctx, dx, dy, dw, dh) {
     let cur = src, cx = sx, cy = sy, cw = sw, ch = sh, k = 0;
     while (cw >= dw * 2 || ch >= dh * 2) {
@@ -1267,3 +1261,140 @@ function fluidYield() {
     }
     return new Promise(r => { _fluidPending.push(r); _fluidMC.port2.postMessage(0); });
 }
+
+/** Sweep progress 0..1 for every frame: equal in TIME (frames.meta.timestamps if present), else in frame index. */
+function sweepProgress(frames) {
+    const N = frames.length, p = new Float32Array(N);
+    if (N < 2) return p;
+    const ts = frames.meta && frames.meta.timestamps;
+    const useTs = ts && ts.length >= N && ts[N - 1] > ts[0];
+    for (let k = 0; k < N; k++) p[k] = useTs ? (ts[k] - ts[0]) / (ts[N - 1] - ts[0]) : k / (N - 1);
+    return p;
+}
+
+function sweepEase(ease) {
+    if (typeof ease === "function") return ease;
+    if (ease === "smooth") return p => p * p * (3 - 2 * p);
+    return p => p;
+}
+
+/**
+ * Normalized x of the slit's left edge for every frame (Float32Array), plus the start and end used.
+ * Returns {x, x0, x1}.
+ */
+function sweepPositions(frames, rect, opts = {}) {
+    const N = frames.length;
+    const dir = opts.direction === "left" ? -1 : 1;
+    const maxX = Math.max(0, 1 - rect.width);
+    const x0 = Math.min(maxX, Math.max(0, rect.x));
+    let x1 = opts.endX != null ? opts.endX : (dir > 0 ? maxX : 0);
+    x1 = Math.min(maxX, Math.max(0, x1));
+    if ((x1 - x0) * dir < 0) {
+        console.warn(`sweep: endX ${x1.toFixed(3)} is on the wrong side of the start ${x0.toFixed(3)} for direction "${opts.direction || "right"}"; the slit will move the other way.`);
+    } else if (x1 === x0) {
+        console.warn("sweep: the slit is already at its end position, so it will not move.");
+    }
+    const ease = sweepEase(opts.ease), p = sweepProgress(frames), x = new Float32Array(N);
+    for (let k = 0; k < N; k++) {
+        const q = Math.min(1, Math.max(0, ease(p[k])));
+        x[k] = x0 + (x1 - x0) * q;
+    }
+    return {x, x0, x1};
+}
+
+/**
+ * Render the sweeping slit into stripe n.
+ * Returns {x, x0, x1, nCols}: the slit position per frame, for your own use (debug, plotting).
+ */
+function slitSweep(frames, rect, n, opts = {}) {
+    if (!frames || !frames.length) return null;
+    const stripe = stripes[n] || {};
+    const [sampleWidth, sampleHeight] = stripe.size || defaultSampleSize;
+    const can = d3.select(`.stripeCan[row='${n}']`).node();
+    if (!can) {
+        console.warn(`slitSweep: no .stripeCan[row='${n}'] canvas.`);
+        return null;
+    }
+    if (!(rect.width > 0 && rect.height > 0)) {
+        console.warn("slitSweep: the rect has no area.");
+        return null;
+    }
+    if (rect.height < rect.width) console.warn("slitSweep: the rect is wider than tall; a sweeping slit is meant to be vertical.");
+
+    const plan = stripeLength(frames, stripe, sampleWidth);        // same stripe length rules as slitRect
+    const nCols = plan.nCols;
+    const ranges = columnRanges(frames, nCols, plan.legacyGroup);
+    const average = stripe.average !== false;
+    const maxAvg = stripe.maxAverage || 12;
+    const perColumn = opts.positionPer === "column";
+    const flip = !!stripe.flip;
+
+    const pos = sweepPositions(frames, rect, opts);
+    const fw = frames[0].width, fh = frames[0].height;
+    const sy = rect.y * fh, sh = Math.max(2, rect.height * fh), sw = Math.max(2, rect.width * fw);
+
+    can.width = nCols * sampleWidth;
+    can.height = sampleHeight;
+    const ctx = can.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+
+    const stage = scratchCanvas(2, sampleWidth, sampleHeight);
+    const sctx = stage.getContext("2d");
+
+    for (let j = 0; j < nCols; j++) {
+        const start = ranges[j][0];
+        const end = average ? ranges[j][1] : start + 1;
+        const step = Math.max(1, Math.ceil((end - start) / maxAvg));
+
+        // slit position shared by the whole column, or null to use each frame's own position
+        let xCol = null;
+        if (perColumn) {
+            const mid = Math.min(frames.length - 1, Math.floor((ranges[j][0] + ranges[j][1] - 1) / 2));
+            xCol = pos.x[mid];
+        }
+
+        sctx.clearRect(0, 0, sampleWidth, sampleHeight);
+        let used = 0;
+        for (let k = start; k < end; k += step) {
+            sctx.globalAlpha = 1 / (++used);                       // running mean of the frames of this column
+            const xk = (xCol != null ? xCol : pos.x[k]) * fw;      // fractional: no jitter from rounding
+            drawBox(frames[k], xk, sy, sw, sh, sctx, 0, 0, sampleWidth, sampleHeight);
+        }
+        sctx.globalAlpha = 1;
+
+        const dx = j * sampleWidth;
+        if (flip) {
+            ctx.save();
+            ctx.translate(dx + sampleWidth, sampleHeight);
+            ctx.rotate(Math.PI);
+            ctx.drawImage(stage, 0, 0);
+            ctx.restore();
+        } else {
+            ctx.drawImage(stage, dx, 0);
+        }
+    }
+
+    stripe.sweep = {direction: opts.direction === "left" ? "left" : "right", x0: pos.x0, x1: pos.x1, x: pos.x};
+
+    if (typeof redrawMapping === "function") {
+        redrawMapping();                                           // applies pan / zoom and handles map mode
+    } else if (typeof stroke !== "undefined" && stroke.length > 0) {
+        makeMapping(stroke.map(d => ({x: d[0], y: d[1]})));
+    }
+    return {x: pos.x, x0: pos.x0, x1: pos.x1, nCols};
+}
+
+/** Frame k with the slit at its position at that time (yellow) and the start / end positions (cyan). */
+function drawSweepDebug(canvas, frames, rect, opts, k) {
+    const W = canvas.width = frames[k].width, H = canvas.height = frames[k].height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(frames[k], 0, 0);
+    const pos = sweepPositions(frames, rect, opts || {});
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#0ff";
+    ctx.strokeRect(pos.x0 * W, rect.y * H, rect.width * W, rect.height * H);
+    ctx.strokeRect(pos.x1 * W, rect.y * H, rect.width * W, rect.height * H);
+    ctx.strokeStyle = "#ff0";
+    ctx.strokeRect(pos.x[k] * W, rect.y * H, rect.width * W, rect.height * H);
+}
+

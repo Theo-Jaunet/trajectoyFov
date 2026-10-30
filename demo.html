@@ -70,6 +70,7 @@
 <div style="display: none" class="hiddenControls">
     <input id="videoInput" type="file" style="max-width: 400px" accept="video/*"/>
     <input id="trajectoryFile" type="file"/>
+    <input id="mainChart" type="file"/>
     <input id="mainBg" type="file" accept="image/*"/>
     <input id="waypointFile" style="display: none" type="file" accept="image/*"/>
     <input id="seaFile" type="file" accept="text/csv"/>
@@ -83,8 +84,8 @@
         <button onclick="fakeVideo()">Import Video</button>
         <button onclick="fakeGpx()">Import GPX</button>
         <button onclick="fakeBg()">Import Background</button>
-        <button onclick="">Import Data</button>
-<!--        <button onclick="fakeSea()">Import SeaRequestCSV</button>-->
+        <button onclick="fakeData()" onclick="">Import Data</button>
+        <!--        <button onclick="fakeSea()">Import SeaRequestCSV</button>-->
     </div>
 
     <img style="position: absolute;right: 5px;margin-right:5px;margin-top:5px  ;height: 40px"
@@ -137,10 +138,15 @@
                 <img onclick="strokeToggle()" id="strokeBtn" src="assets/images/pictos/stroke.png">
                 <!--                    <img onclick="cropToggle()" id="cropBG" src="assets/images/pictos/crop.png">-->
                 <img onclick="mapToggle()" id="mapToggle" src="assets/images/pictos/map.png">
+                <img onclick="chartToggle()" id="chartToggle" src="assets/images/pictos/chart.png">
                 <div style="display: inline-block;">
                     <!--                    <label style="display: inline-block;" for="meshHeight">BandWidth</label>-->
                     <input style="width: 122px;margin-bottom: 4px" id="meshHeight" type="range" min="0" value="0.3"
                            max="1" step="0.05"/>
+                </div>
+                <div id="chartOptions" style="display: inline-block;">
+                    <select id="chartX"></select>
+                    <select id="chartY"></select>
                 </div>
             </div>
 
@@ -169,14 +175,14 @@
     <div style="">
         <div style="position: absolute;margin-top: -15px">
             <button onclick="loadPreset()"> Reset preset</button>
-<!--            <button onclick="addIntervalSvg()"> Add row</button>-->
-<!--            <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">-->
+            <!--            <button onclick="addIntervalSvg()"> Add row</button>-->
+            <!--            <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">-->
         </div>
         <div style="width: 100%" id="intervalList">
 
         </div>
         <div style="width: 100%;text-align: center">
-        <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">
+            <img onclick="addIntervalSvg()" class="addRow" src="assets/images/pictos/plus.png">
         </div>
         <svg id="stripeBrush"></svg>
         <div id="stripeList">
@@ -233,7 +239,9 @@
 <dialog id="stripeSettings" class="modal stripeModal" aria-labelledby="stripeSettingsTitle">
     <div class="ssTop">
         <h4 id="stripeSettingsTitle">Stripe settings</h4>
-        <button type="button" id="ssClose" class="ssIconBtn" aria-label="Close the stripe settings" title="Close">&times;</button>
+        <button type="button" id="ssClose" class="ssIconBtn" aria-label="Close the stripe settings" title="Close">
+            &times;
+        </button>
     </div>
     <div id="stripeSettingsBody"></div>
     <div class="ssFoot">

@@ -68,16 +68,23 @@ function yieldToUI() {
     if (typeof MessageChannel === "undefined") return new Promise(r => setTimeout(r, 0));
     if (!_yieldMC) {
         _yieldMC = new MessageChannel();
-        _yieldMC.port1.onmessage = () => { const f = _yieldPending.shift(); if (f) f(); };
+        _yieldMC.port1.onmessage = () => {
+            const f = _yieldPending.shift();
+            if (f) f();
+        };
     }
-    return new Promise(r => { _yieldPending.push(r); _yieldMC.port2.postMessage(0); });
+    return new Promise(r => {
+        _yieldPending.push(r);
+        _yieldMC.port2.postMessage(0);
+    });
 }
 
 
 async function mediaFramesTest(file, opts = {}) {
     const o = {maxFps: 24, retain: true, ...opts};
     const notice = o.onNotice || (m => console.info(m));
-    const allFrames = o.allFrames !== false;
+    const requestedAllFrames = o.allFrames !== false;
+    let allFrames = requestedAllFrames;
     const frames = [];
     const stamps = [];
     const svg = d3.select("#videoOverlay");
@@ -90,11 +97,24 @@ async function mediaFramesTest(file, opts = {}) {
         });
         const [duration, videoTrack] = await Promise.all([input.computeDuration(), input.getPrimaryVideoTrack()]);
 
+        // Long videos are sampled at a reduced frame rate to limit processing and memory use.
+        const durationFpsCap = duration >= 3600 ? 1
+            : duration > 1800 ? 4
+                : duration > 900 ? 12
+                    : null;
+        if (durationFpsCap !== null) {
+            allFrames = false;
+            o.maxFps = Math.min(o.maxFps ?? 24, durationFpsCap);
+            notice(`Video duration is ${Math.round(duration / 60)} minutes; sampling at up to ${o.maxFps} fps.`);
+        }
+
         if (!videoTrack) throw new Error("No video track found in this file.");
         if (!(await videoTrack.canDecode())) {
             throw new Error("This video's codec cannot be decoded by your browser (HEVC/H.265 is a common cause, "
                 + "e.g. GoPro or iPhone footage). Re-encode it as H.264 and try again.");
         }
+
+        o.size = "native"
 
         const size = resolveFrameSize(o, videoTrack, notice);
         const stats = await videoTrack.computePacketStats(100);
@@ -173,14 +193,20 @@ async function mediaFramesTest(file, opts = {}) {
             };
             if (allFrames && typeof sink.samples === "function") {
                 for await (const sample of sink.samples(start)) {
-                    if (stop()) { sample.close(); break; }
+                    if (stop()) {
+                        sample.close();
+                        break;
+                    }
                     await drawSample(sample, sample.timestamp);
                 }
             } else {
                 const ts = timesFor();
                 let idx = 0;
                 for await (const sample of sink.samplesAtTimestamps(ts)) {
-                    if (o.signal?.aborted) { sample?.close(); break; }
+                    if (o.signal?.aborted) {
+                        sample?.close();
+                        break;
+                    }
                     if (sample) await drawSample(sample, ts[idx]);
                     else if (last && o.retain) await emit(last, ts[idx]);
                     idx++;
